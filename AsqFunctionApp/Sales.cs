@@ -4,6 +4,7 @@ using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
+using NServiceBus.Configuration.AdvancedExtensibility;
 
 namespace AsqFunctionApp
 {
@@ -17,8 +18,10 @@ namespace AsqFunctionApp
         {
             var ec = new EndpointConfiguration(endpointName);
 
+            ec.GetSettings().Set("hack-do-not-use-the-pump", true);
             ec.UseTransport<AzureServiceBusTransport>()
                 .ConnectionString("todo");
+
             //ec.UseAzureFunctionDelayedLogger();//figure this out
             var instance = Endpoint.Start(ec).GetAwaiter().GetResult();
 

@@ -1,3 +1,5 @@
+using NServiceBus.Settings;
+
 namespace NServiceBus
 {
     using System;
@@ -10,7 +12,8 @@ namespace NServiceBus
 
     class ReceiveComponent
     {
-        public ReceiveComponent(ReceiveConfiguration configuration,
+        public ReceiveComponent(SettingsHolder settings,
+            ReceiveConfiguration configuration,
             TransportReceiveInfrastructure receiveInfrastructure,
             PipelineComponent pipeline,
             IBuilder builder,
@@ -18,6 +21,7 @@ namespace NServiceBus
             CriticalError criticalError,
             string errorQueue)
         {
+            this.settings = settings;
             this.configuration = configuration;
             this.receiveInfrastructure = receiveInfrastructure;
             this.pipeline = pipeline;
@@ -29,7 +33,7 @@ namespace NServiceBus
 
         public void BindQueues(QueueBindings queueBindings)
         {
-            if (IsSendOnly)
+            if (IsSendOnly || UseManualPump)
             {
                 return;
             }
@@ -55,6 +59,11 @@ namespace NServiceBus
             }
 
             mainPipelineExecutor = new MainPipelineExecutor(builder, pipeline);
+
+            if (UseManualPump)
+            {
+                return;
+            }
 
             if (configuration.PurgeOnStartup)
             {
@@ -112,7 +121,7 @@ namespace NServiceBus
 
         public Task CreateQueuesIfNecessary(QueueBindings queueBindings, string username)
         {
-            if (IsSendOnly)
+            if (IsSendOnly || UseManualPump)
             {
                 return TaskEx.CompletedTask;
             }
@@ -124,7 +133,7 @@ namespace NServiceBus
 
         public async Task PerformPreStartupChecks()
         {
-            if (IsSendOnly)
+            if (IsSendOnly || UseManualPump)
             {
                 return;
             }
@@ -138,6 +147,8 @@ namespace NServiceBus
         }
 
         bool IsSendOnly => configuration == null;
+
+        bool UseManualPump => settings.GetOrDefault<bool>("hack-do-not-use-the-pump");
 
         void AddReceivers()
         {
@@ -173,6 +184,7 @@ namespace NServiceBus
             return receiveInfrastructure.MessagePumpFactory();
         }
 
+        private readonly SettingsHolder settings;
         ReceiveConfiguration configuration;
         List<TransportReceiver> receivers = new List<TransportReceiver>();
         TransportReceiveInfrastructure receiveInfrastructure;
