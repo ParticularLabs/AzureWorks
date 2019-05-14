@@ -19,22 +19,43 @@ namespace AsqFunctionApp
             ec.UseTransport<AzureServiceBusTransport>()
                 .ConnectionString("todo");
             //ec.UseAzureFunctionDelayedLogger();//figure this out
-            endpoint = Endpoint.Start(ec).GetAwaiter().GetResult();
+            var instance = Endpoint.Start(ec).GetAwaiter().GetResult();
+
+            endpoint = new FunctionsAwareEndpoint(instance);
         }
 
-        //[FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
-        //public static async Task Run([QueueTrigger(endpointName, Connection = sbConnString)]CloudQueueMessage message, ILogger log, IAsyncCollector<string> outputStuff)
-        //{
-        //    return endpoint.Invoke("", message, log, outputStuff);
-        //}
+        [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
+        public static Task Run([QueueTrigger(endpointName, Connection = sbConnString)]CloudQueueMessage message, ILogger log, IAsyncCollector<string> collector)
+        {
+            //todo: what if this was using a HttpTrigger
+            return endpoint.Invoke(message, log, collector);
+        }
 
-        private static IEndpointInstance endpoint;
+        private static FunctionsAwareEndpoint endpoint;
 
         private const string sbConnString = "sb://my-namespace";
 
         private const string endpointName = "sales-process-order";
 
 
+    }
+
+    class FunctionsAwareEndpoint
+    {
+        private readonly IEndpointInstance endpointInstance;
+
+        public FunctionsAwareEndpoint(IEndpointInstance endpointInstance)
+        {
+            this.endpointInstance = endpointInstance;
+        }
+
+        public Task Invoke<T>(CloudQueueMessage message, ILogger log, IAsyncCollector<T> collector)
+        {
+            //TODO: marshal the logger
+            //TODO: get the collector into the root context
+
+            return Task.CompletedTask;
+        }
     }
 
     class PlaceOrderHandler : IHandleMessages<PlaceOrder>
