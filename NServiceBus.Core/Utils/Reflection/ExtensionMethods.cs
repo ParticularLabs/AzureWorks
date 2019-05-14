@@ -102,9 +102,10 @@ namespace NServiceBus
 
         public static bool IsFromParticularAssembly(this Type type)
         {
-            return type.Assembly.GetName()
-                .GetPublicKeyToken()
-                .SequenceEqual(nsbPublicKeyToken);
+            return false; //TODO: put strong name back
+            //return type.Assembly.GetName()
+            //    .GetPublicKeyToken()
+            //    .SequenceEqual(nsbPublicKeyToken);
         }
 
         static byte[] MsPublicKeyToken = typeof(string).Assembly.GetName().GetPublicKeyToken();

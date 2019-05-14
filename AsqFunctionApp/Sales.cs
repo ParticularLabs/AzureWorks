@@ -20,26 +20,27 @@ namespace AsqFunctionApp
 
             ec.GetSettings().Set("hack-do-not-use-the-pump", true);
             ec.UseTransport<AzureServiceBusTransport>()
-                .ConnectionString("todo");
-
-            //ec.UseAzureFunctionDelayedLogger();//figure this out
+                .ConnectionString("PUT SB CONNSTRING HERE");
+            
             var instance = Endpoint.Start(ec).GetAwaiter().GetResult();
 
             endpoint = new FunctionsAwareEndpoint(instance);
         }
 
         [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
-        public static Task Run([ServiceBusTrigger(endpointName, Connection = sbConnString)]Message message, ILogger log, IAsyncCollector<string> collector)
+        public static Task Run([ServiceBusTrigger(endpointName, Connection = "my-sb-connstring")]Message message, ILogger log)
         {
+            //todo: can't get the collector to work, fake for now
+            IAsyncCollector<string> collector = null;
+
             //todo: what if this was using a HttpTrigger
             return endpoint.Invoke(message, log, collector);
         }
 
         private static FunctionsAwareEndpoint endpoint;
 
-        private const string sbConnString = "sb://my-namespace";
 
-        private const string endpointName = "sales-process-order";
+        private const string endpointName = "sales";
 
 
     }
@@ -48,19 +49,36 @@ namespace AsqFunctionApp
     {
         public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
         {
-            await context.GetAsyncCollector<string>()
-                .AddAsync("some-payload"); //push stuff out via native connectors
+            Console.Out.WriteLine("Place order!");
+            //await context.GetAsyncCollector<string>()
+            //    .AddAsync("some-payload"); //push stuff out via native connectors
 
             await context.Publish(new OrderPlaced());//emit messages to the ASB namespace we received the message from
+            await context.SendLocal(new SomeLocalMessage());
         }
     }
 
-    internal class OrderPlaced : IEvent
+    class SomeLocalMessageHandler : IHandleMessages<SomeLocalMessage>
     {
-    }
+        public Task Handle(SomeLocalMessage message, IMessageHandlerContext context)
+        {
+            Console.Out.WriteLine("Got the local message");
 
-    internal class PlaceOrder : ICommand
-
-    {
+            return Task.CompletedTask;
+        }
     }
+}
+
+internal class OrderPlaced : IEvent
+{
+}
+
+internal class PlaceOrder : ICommand
+
+{
+}
+
+
+internal class SomeLocalMessage : IMessage
+{
 }
