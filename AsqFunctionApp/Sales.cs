@@ -15,20 +15,20 @@ namespace AsqFunctionApp
         {
             var ec = new EndpointConfiguration(endpointName);
 
-            ec.AssemblyScanner().OnlyTypesFrom(typeof(Sales).Assembly);
-            ec.UseTransport<AzureFunctionsASB>()
-                .ConnectionString(SomeReader.Read(sbConnString));
-            ec.UseAzureFunctionDelayedLogger();//figure this out
+          
+            ec.UseTransport<AzureServiceBusTransport>()
+                .ConnectionString("todo");
+            //ec.UseAzureFunctionDelayedLogger();//figure this out
             endpoint = Endpoint.Start(ec).GetAwaiter().GetResult();
         }
 
-        [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
-        public static async Task Run([QueueTrigger(endpointName, Connection = sbConnString)]CloudQueueMessage message, ILogger log, IAsyncCollector<string> outputStuff)
-        {
-            return endpoint.Invoke("", message, log, outputStuff);
-        }
+        //[FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
+        //public static async Task Run([QueueTrigger(endpointName, Connection = sbConnString)]CloudQueueMessage message, ILogger log, IAsyncCollector<string> outputStuff)
+        //{
+        //    return endpoint.Invoke("", message, log, outputStuff);
+        //}
 
-        private IEndpointInstance endpoint;
+        private static IEndpointInstance endpoint;
 
         private const string sbConnString = "sb://my-namespace";
 
@@ -41,7 +41,7 @@ namespace AsqFunctionApp
     {
         public Task Handle(PlaceOrder message, IMessageHandlerContext context)
         {
-            await context.AddToCollector("some-payload"); //push stuff out via native connectors
+            //await context.AddToCollector("some-payload"); //push stuff out via native connectors
 
             return context.Publish(new OrderPlaced());//emit messages to the ASB namespace we received the message from
         }
