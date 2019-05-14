@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
-using NServiceBus.Extensibility;
-using NServiceBus.Transport;
-using NServiceBus.Transport.AzureServiceBus;
 
 namespace AsqFunctionApp
 {
@@ -20,7 +16,6 @@ namespace AsqFunctionApp
         static Sales()
         {
             var ec = new EndpointConfiguration(endpointName);
-
 
             ec.UseTransport<AzureServiceBusTransport>()
                 .ConnectionString("todo");
@@ -46,41 +41,6 @@ namespace AsqFunctionApp
 
     }
 
-    class FunctionsAwareEndpoint
-    {
-        private readonly IEndpointInstance endpointInstance;
-
-        public FunctionsAwareEndpoint(IEndpointInstance endpointInstance)
-        {
-            this.endpointInstance = endpointInstance;
-        }
-
-        public Task Invoke<T>(Message message, ILogger log, IAsyncCollector<T> collector)
-        {
-            //TODO: marshal the logger
-            //TODO: get the collector into the root context
-
-            var messageId = message.GetMessageId();
-            var headers = message.GetNServiceBusHeaders();
-            var body = message.GetBody();
-
-            var rootContext = new ContextBag();
-
-            rootContext.Set(collector);
-
-            var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
-            return endpointInstance.PushMessage(messageContext);
-        }
-    }
-
-    static class MessageContextExtensions
-    {
-        public static IAsyncCollector<T> GetAsyncCollector<T>(this IMessageHandlerContext context)
-        {
-            return context.Extensions.Get<IAsyncCollector<T>>();
-        }
-    }
-
     class PlaceOrderHandler : IHandleMessages<PlaceOrder>
     {
         public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
@@ -101,11 +61,3 @@ namespace AsqFunctionApp
     {
     }
 }
-
-
-//{
-//"name": "nsbEmitter",
-//"type": "NServiceBus",
-//"connection": "MyServiceBusConnection",
-//"direction": "out"
-//}
