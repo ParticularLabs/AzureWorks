@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
+using NServiceBus.Transport;
 
 namespace AsqFunctionApp
 {
@@ -25,7 +27,7 @@ namespace AsqFunctionApp
         }
 
         [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
-        public static Task Run([QueueTrigger(endpointName, Connection = sbConnString)]CloudQueueMessage message, ILogger log, IAsyncCollector<string> collector)
+        public static Task Run([ServiceBusTrigger(endpointName, Connection = sbConnString)]CloudQueueMessage message, ILogger log, IAsyncCollector<string> collector)
         {
             //todo: what if this was using a HttpTrigger
             return endpoint.Invoke(message, log, collector);
@@ -51,10 +53,11 @@ namespace AsqFunctionApp
 
         public Task Invoke<T>(CloudQueueMessage message, ILogger log, IAsyncCollector<T> collector)
         {
+            throw new NotImplementedException();
             //TODO: marshal the logger
-            //TODO: get the collector into the root context
-
-            return Task.CompletedTask;
+            ////TODO: get the collector into the root context
+            //var messageContext = new MessageContext(message.Id,new Dictionary<string, string>(me), );
+            //return endpointInstance.PushMessage();
         }
     }
 
