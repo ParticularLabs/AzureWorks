@@ -61,6 +61,11 @@ namespace NServiceBus
             }
         }
 
+        public Task PushMessage(MessageContext messageContext)
+        {
+            return receiveComponent.PushMessage(messageContext);
+        }
+
         public Task Send(object message, SendOptions options)
         {
             return messageSession.Send(message, options);

@@ -6,7 +6,8 @@
     using Microsoft.Azure.ServiceBus;
     using Microsoft.Azure.ServiceBus.InteropExtensions;
 
-    static class MessageExtensions
+    //for now
+    public static class MessageExtensions
     {
         public static Dictionary<string, string> GetNServiceBusHeaders(this Message message)
         {

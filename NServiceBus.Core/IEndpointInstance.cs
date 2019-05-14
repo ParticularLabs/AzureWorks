@@ -1,3 +1,5 @@
+using NServiceBus.Transport;
+
 namespace NServiceBus
 {
     using System.Threading.Tasks;
@@ -11,5 +13,12 @@ namespace NServiceBus
         /// Stops the endpoint.
         /// </summary>
         Task Stop();
+
+        /// <summary>
+        /// Manually pushes a message into the endpoint
+        /// </summary>
+        /// <param name="messageContext"></param>
+        /// <returns></returns>
+        Task PushMessage(MessageContext messageContext);
     }
 }

@@ -77,6 +77,11 @@ namespace NServiceBus
             }
         }
 
+        public Task PushMessage(MessageContext messageContext)
+        {
+            return mainPipelineExecutor.Invoke(messageContext);
+        }
+
         public void Start()
         {
             foreach (var receiver in receivers)
