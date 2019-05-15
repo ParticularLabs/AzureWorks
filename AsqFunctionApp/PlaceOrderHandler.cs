@@ -16,6 +16,7 @@ namespace FunctionApp
 
             await context.Publish(new OrderPlaced());//emit messages to the ASB namespace we received the message from
             await context.SendLocal(new SomeLocalMessage());
+            await context.SendLocal(new SomeRoutedMessage());
         }
 
         static ILog logger = LogManager.GetLogger<PlaceOrderHandler>();

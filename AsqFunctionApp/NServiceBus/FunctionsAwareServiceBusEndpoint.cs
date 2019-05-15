@@ -20,6 +20,13 @@ namespace NServiceBus
         {
             this.endpointName = endpointName;
             this.serviceBusConnectionStringName = serviceBusConnectionStringName;
+
+            endpointConfiguration = new EndpointConfiguration(endpointName);
+            endpointConfiguration.GetSettings().Set("hack-do-not-use-the-pump", true);
+
+            transport = endpointConfiguration.UseTransport<AzureServiceBusTransport>();
+
+            Routing = transport.Routing();
         }
         public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
         {
@@ -56,7 +63,6 @@ namespace NServiceBus
         {
             NServiceBus.Logging.LogManager.UseFactory(new MsExtLoggerFactory(logger));
 
-            var ec = new EndpointConfiguration(endpointName);
 
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(executionContext.FunctionDirectory)
@@ -64,14 +70,17 @@ namespace NServiceBus
                 .AddEnvironmentVariables()
                 .Build();
 
-            ec.GetSettings().Set("hack-do-not-use-the-pump", true);
-            ec.UseTransport<AzureServiceBusTransport>()
-                .ConnectionString(configuration[serviceBusConnectionStringName]);
+            transport.ConnectionString(configuration[serviceBusConnectionStringName]);
 
-            return Endpoint.Start(ec);
+
+            return Endpoint.Start(endpointConfiguration);
         }
 
+        public RoutingSettings Routing { get; }
+
+        EndpointConfiguration endpointConfiguration;
         IEndpointInstance endpointInstance;
+        TransportExtensions<AzureServiceBusTransport> transport;
 
         readonly string endpointName;
         readonly string serviceBusConnectionStringName;

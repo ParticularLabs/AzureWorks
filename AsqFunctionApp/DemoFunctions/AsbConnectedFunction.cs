@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 
 namespace FunctionApp
 {
-    
+
     public static class AsbConnectedFunction
     {
         static AsbConnectedFunction()
         {
             endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
+
+            endpoint.Routing.RouteToEndpoint(typeof(SomeRoutedMessage), endpointName);
         }
 
         [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
