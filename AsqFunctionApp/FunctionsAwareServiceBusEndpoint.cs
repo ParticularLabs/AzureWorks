@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
 using NServiceBus.Extensibility;
@@ -13,14 +14,12 @@ using ExecutionContext = Microsoft.Azure.WebJobs.ExecutionContext;
 
 namespace NServiceBus
 {
-    class FunctionsAwareEndpoint
+    class FunctionsAwareServiceBusEndpoint
     {
-        private readonly string endpointName;
-        private readonly IEndpointInstance endpointInstance;
-
-        public FunctionsAwareEndpoint(string endpointName)
+        public FunctionsAwareServiceBusEndpoint(string endpointName, string serviceBusConnectionStringName)
         {
             this.endpointName = endpointName;
+            this.serviceBusConnectionStringName = serviceBusConnectionStringName;
         }
         public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
         {
@@ -34,45 +33,46 @@ namespace NServiceBus
 
             var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
 
-            var instance = await GetEndpoint(logger, collector, executionContext);
+            var instance = await GetEndpoint(logger, executionContext);
 
             //TODO: error handling
             await instance.PushMessage(messageContext);
         }
 
-        Task<IEndpointInstance> GetEndpoint(ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
+        async Task<IEndpointInstance> GetEndpoint(ILogger logger, ExecutionContext executionContext)
         {
-            //todo: proper lazy or locking
+
+            //TODO: locking or lazy
             if (endpointInstance != null)
             {
-                return Task.FromResult(endpointInstance);
+                return endpointInstance;
             }
 
-            return InitializeEndpoint(logger, collector, executionContext);
+            endpointInstance = await InitializeEndpoint(logger, executionContext);
+
+            return endpointInstance;
         }
 
-        Task<IEndpointInstance> InitializeEndpoint(ILogger logger, IAsyncCollector<string> collector, ExecutionContext context)
+        Task<IEndpointInstance> InitializeEndpoint(ILogger logger, ExecutionContext executionContext)
         {
             var ec = new EndpointConfiguration(endpointName);
 
-            #region how to get access to the connection string using ExecutionContext
-
-            // should be assigned to a static not to create all the time
-
-            //var configuration = new ConfigurationBuilder()
-            //    .SetBasePath(executionContext.FunctionDirectory)
-            //    .AddJsonFile("local.settings.json", optional: true, reloadOnChange: false)
-            //    .AddEnvironmentVariables()
-            //    .Build();
-            //logger.LogInformation(configuration["my-sb-connstring"]);
-
-            #endregion
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(executionContext.FunctionDirectory)
+                .AddJsonFile("local.settings.json", optional: true, reloadOnChange: false)
+                .AddEnvironmentVariables()
+                .Build();
 
             ec.GetSettings().Set("hack-do-not-use-the-pump", true);
             ec.UseTransport<AzureServiceBusTransport>()
-                .ConnectionString(Environment.GetEnvironmentVariable("AzureServiceBus_ConnectionString"));
+                .ConnectionString(configuration[serviceBusConnectionStringName]);
 
             return Endpoint.Start(ec);
         }
+
+        IEndpointInstance endpointInstance;
+
+        readonly string endpointName;
+        readonly string serviceBusConnectionStringName;
     }
 }

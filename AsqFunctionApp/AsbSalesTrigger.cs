@@ -9,18 +9,18 @@ namespace AsbFunctionApp
 {
     using System.Threading.Tasks;
 
-    public static class Sales
-    {
-        static Sales()
-        {
-            //TODO: create a collector transport?
-            endpoint = new FunctionsAwareEndpoint(endpointName);
-        }
 
+    //TODO: create a collector transport?
+    public static class AsbSalesTrigger
+    {
+        static AsbSalesTrigger()
+        {
+            endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
+        }
 
         //TODO: what if this was using a HttpTrigger
         [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
-        public static Task Run([ServiceBusTrigger(endpointName, Connection = "my-sb-connstring")]Message message,
+        public static Task Run([ServiceBusTrigger(endpointName, Connection = connectionStringName)]Message message,
             [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector,
             ILogger logger,
             ExecutionContext context)
@@ -28,8 +28,9 @@ namespace AsbFunctionApp
             return endpoint.Invoke(message, logger, collector, context);
         }
 
-        static FunctionsAwareEndpoint endpoint;
+        static FunctionsAwareServiceBusEndpoint endpoint;
         const string endpointName = "sales";
+        const string connectionStringName = "my-sb-connstring";
     }
 
     class PlaceOrderHandler : IHandleMessages<PlaceOrder>
@@ -66,7 +67,6 @@ internal class PlaceOrder : ICommand
 
 {
 }
-
 
 internal class SomeLocalMessage : IMessage
 {
