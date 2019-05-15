@@ -1,11 +1,18 @@
-using Microsoft.Azure.ServiceBus;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+
 using NServiceBus;
-using NServiceBus.Logging;
 
 namespace FunctionApp
 {
+    using Microsoft.AspNetCore.Mvc;
     using System.Threading.Tasks;
 
 
@@ -14,19 +21,31 @@ namespace FunctionApp
     {
         static HttpConnectedToAsbFunction()
         {
-            //endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
+            endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
+
+            endpoint.Routing.RouteToEndpoint(typeof(PlaceOrder), endpointName); //route to our self just to demo
         }
 
-        //[FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
-        //public static Task Run([ServiceBusTrigger(endpointName, Connection = connectionStringName)]Message message,
-        //    [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector,
-        //    ILogger logger,
-        //    ExecutionContext context)
-        //{
-        //    return endpoint.Invoke(message, logger, collector, context);
-        //}
+        [FunctionName("placeOrder")]
+        public static async Task<IActionResult> Run(
+             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+             ILogger logger,
+             ExecutionContext context)
+        {
+            //string name = req.Query["name"];
 
-        //static FunctionsAwareServiceBusEndpoint endpoint;
+            //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            //dynamic data = JsonConvert.DeserializeObject(requestBody);
+            //name = name ?? data?.name;
+
+            await endpoint.Send(new PlaceOrder(), logger, context);
+
+            return (ActionResult)new AcceptedResult();
+        }
+
+        static FunctionsAwareServiceBusEndpoint endpoint;
+
         const string endpointName = "sales";
+        const string connectionStringName = "my-sb-connstring";
     }
 }

@@ -45,6 +45,13 @@ namespace NServiceBus
             await instance.PushMessage(messageContext);
         }
 
+        public async Task Send<T>(T message, ILogger logger, ExecutionContext executionContext)
+        {
+            var instance = await GetEndpoint(logger, executionContext);
+
+            await instance.Send(message);
+        }
+
         async Task<IEndpointInstance> GetEndpoint(ILogger logger, ExecutionContext executionContext)
         {
 
