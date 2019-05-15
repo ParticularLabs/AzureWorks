@@ -9,15 +9,14 @@ namespace AsbFunctionApp
     using System.Threading.Tasks;
 
 
-    //TODO: create a collector transport?
-    public static class AsbSalesTrigger
+    public static class AsbConnectedFunction
     {
-        static AsbSalesTrigger()
+        static AsbConnectedFunction()
         {
+            //TODO: create a collector transport?
             endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
         }
 
-        //TODO: what if this was using a HttpTrigger
         [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
         public static Task Run([ServiceBusTrigger(endpointName, Connection = connectionStringName)]Message message,
             [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector,
