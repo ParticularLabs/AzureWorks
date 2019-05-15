@@ -17,9 +17,9 @@ namespace FunctionApp
 
 
     //TODO: create a collector transport?
-    public static class HttpConnectedToAsbFunction
+    public static class HttpEmittingMessagesToAsb
     {
-        static HttpConnectedToAsbFunction()
+        static HttpEmittingMessagesToAsb()
         {
             endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
 
