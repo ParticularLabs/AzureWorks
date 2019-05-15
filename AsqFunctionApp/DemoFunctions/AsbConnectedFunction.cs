@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using NServiceBus;
 using System.Threading.Tasks;
 
-namespace AsbFunctionApp
+namespace FunctionApp
 {
     
     public static class AsbConnectedFunction

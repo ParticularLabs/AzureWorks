@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using NServiceBus;
 using NServiceBus.Logging;
 
-namespace AsbFunctionApp
+namespace FunctionApp
 {
     using System.Threading.Tasks;
 

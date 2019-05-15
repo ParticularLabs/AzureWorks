@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using NServiceBus;
 using NServiceBus.Logging;
 
-namespace AsbFunctionApp
+namespace FunctionApp
 {
     class SomeLocalMessageHandler : IHandleMessages<SomeLocalMessage>
     {
