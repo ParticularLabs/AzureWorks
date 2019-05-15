@@ -6,9 +6,9 @@ namespace NServiceBus
 
     static class MessageContextExtensions
     {
-        public static IAsyncCollector<T> GetAsyncCollector<T>(this IMessageHandlerContext context)
+        public static IAsyncCollector<string> GetAsyncCollector(this IMessageHandlerContext context)
         {
-            return context.Extensions.Get<IAsyncCollector<T>>();
+            return context.Extensions.Get<IAsyncCollector<string>>();
         }
 
         public static ILogger GetLogger(this IMessageHandlerContext context)
