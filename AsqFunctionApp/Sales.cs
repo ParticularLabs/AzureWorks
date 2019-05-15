@@ -8,6 +8,7 @@ using NServiceBus.Configuration.AdvancedExtensibility;
 namespace AsqFunctionApp
 {
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Configuration;
 
     public static class Sales
     {
@@ -19,7 +20,7 @@ namespace AsqFunctionApp
 
             ec.GetSettings().Set("hack-do-not-use-the-pump", true);
             ec.UseTransport<AzureServiceBusTransport>()
-                .ConnectionString("PUT SB CONNSTRING HERE");
+                .ConnectionString(Environment.GetEnvironmentVariable("AzureServiceBus_ConnectionString"));
             
             var instance = Endpoint.Start(ec).GetAwaiter().GetResult();
 
@@ -27,9 +28,25 @@ namespace AsqFunctionApp
         }
 
         [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
-        public static Task Run([ServiceBusTrigger(endpointName, Connection = "my-sb-connstring")]Message message, ILogger logger, [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector)
+        public static Task Run([ServiceBusTrigger(endpointName, Connection = "my-sb-connstring")]Message message, 
+            [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector,
+            ILogger logger,
+            ExecutionContext context)
         {
             //TODO: what if this was using a HttpTrigger
+
+            #region how to get access to the connection string using ExecutionContext
+
+            // should be assigned to a static not to create all the time
+
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(context.FunctionDirectory)
+                .AddJsonFile("local.settings.json", optional: true, reloadOnChange: false)
+                .AddEnvironmentVariables()
+                .Build();
+            logger.LogInformation(configuration["my-sb-connstring"]);
+
+            #endregion
 
             return endpoint.Invoke(message, logger, collector);
         }
