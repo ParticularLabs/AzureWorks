@@ -13,7 +13,7 @@ namespace FunctionApp
         {
             endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
 
-            endpoint.Routing.RouteToEndpoint(typeof(SomeRoutedMessage), endpointName);
+            endpoint.Routing.RouteToEndpoint(typeof(SomeRoutedMessage), endpointName); //route to our self just to demo
         }
 
         [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
