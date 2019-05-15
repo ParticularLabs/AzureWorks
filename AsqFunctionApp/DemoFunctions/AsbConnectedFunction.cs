@@ -6,6 +6,8 @@ namespace FunctionApp
     using NServiceBus;
     using System.Threading.Tasks;
 
+    [System.ComponentModel.EditorBrowsableAttribute]
+
     public static class AsbConnectedFunction
     {
         static AsbConnectedFunction()
