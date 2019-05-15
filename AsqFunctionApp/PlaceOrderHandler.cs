@@ -10,7 +10,7 @@ namespace FunctionApp
         {
             logger.Info("Place order!");
 
-            await context.GetAsyncCollector()
+            await context.GetAsyncCollector<string>()
                 .AddAsync("some-payload"); //push stuff out via native connectors
 
             await context.Publish(new OrderPlaced());//emit messages to the ASB namespace we received the message from
