@@ -29,7 +29,6 @@ namespace NServiceBus
 
             var rootContext = new ContextBag();
             rootContext.Set(collector);
-            rootContext.Set(logger);
 
             var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
 

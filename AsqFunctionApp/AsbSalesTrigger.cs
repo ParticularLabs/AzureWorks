@@ -1,9 +1,8 @@
-using System;
-using System.Diagnostics;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
+using NServiceBus.Logging;
 
 namespace AsbFunctionApp
 {
@@ -32,42 +31,4 @@ namespace AsbFunctionApp
         const string endpointName = "sales";
         const string connectionStringName = "my-sb-connstring";
     }
-
-    class PlaceOrderHandler : IHandleMessages<PlaceOrder>
-    {
-        public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
-        {
-            context.GetLogger().LogInformation("Place order!");
-
-            //TODO: Do we force users to always use a string? If yes we can skip the generic on this method
-            await context.GetAsyncCollector<string>()
-                .AddAsync("some-payload"); //push stuff out via native connectors
-
-            await context.Publish(new OrderPlaced());//emit messages to the ASB namespace we received the message from
-            await context.SendLocal(new SomeLocalMessage());
-        }
-    }
-
-    class SomeLocalMessageHandler : IHandleMessages<SomeLocalMessage>
-    {
-        public Task Handle(SomeLocalMessage message, IMessageHandlerContext context)
-        {
-            context.GetLogger().LogInformation("Got the local message");
-
-            return Task.CompletedTask;
-        }
-    }
-}
-
-internal class OrderPlaced : IEvent
-{
-}
-
-internal class PlaceOrder : ICommand
-
-{
-}
-
-internal class SomeLocalMessage : IMessage
-{
 }
