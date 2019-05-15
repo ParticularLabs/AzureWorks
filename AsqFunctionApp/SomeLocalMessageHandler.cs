@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using NServiceBus;
+using NServiceBus.Logging;
 
 namespace AsbFunctionApp
 {
@@ -8,11 +9,11 @@ namespace AsbFunctionApp
     {
         public Task Handle(SomeLocalMessage message, IMessageHandlerContext context)
         {
-            //context.GetLogger().LogInformation("Got the local message");
-
-            Console.Out.WriteLine("SomeLocalMessage");
-
+            logger.Info("Got the local message");
+           
             return Task.CompletedTask;
         }
+
+        static ILog logger = LogManager.GetLogger<SomeLocalMessageHandler>();
     }
 }

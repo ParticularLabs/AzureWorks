@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using NServiceBus;
+using NServiceBus.Logging;
 
 namespace AsbFunctionApp
 {
@@ -7,8 +8,7 @@ namespace AsbFunctionApp
     {
         public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
         {
-            //TODO: Use NSB logger
-            //context.GetLogger().LogInformation("Place order!");
+            logger.Info("Place order!");
 
             //TODO: Do we force users to always use a string? If yes we can skip the generic on this method
             await context.GetAsyncCollector<string>()
@@ -18,5 +18,6 @@ namespace AsbFunctionApp
             await context.SendLocal(new SomeLocalMessage());
         }
 
+        static ILog logger = LogManager.GetLogger<PlaceOrderHandler>();
     }
 }
