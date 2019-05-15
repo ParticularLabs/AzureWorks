@@ -2,18 +2,15 @@ using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
-using NServiceBus.Logging;
+using System.Threading.Tasks;
 
 namespace AsbFunctionApp
 {
-    using System.Threading.Tasks;
-
-
+    
     public static class AsbConnectedFunction
     {
         static AsbConnectedFunction()
         {
-            //TODO: create a collector transport?
             endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
         }
 
