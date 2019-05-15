@@ -27,11 +27,11 @@ namespace AsqFunctionApp
         }
 
         [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
-        public static Task Run([ServiceBusTrigger(endpointName, Connection = "my-sb-connstring")]Message message, ILogger log, [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector)
+        public static Task Run([ServiceBusTrigger(endpointName, Connection = "my-sb-connstring")]Message message, ILogger logger, [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector)
         {
-            //todo: what if this was using a HttpTrigger
+            //TODO: what if this was using a HttpTrigger
 
-            return endpoint.Invoke(message, log, collector);
+            return endpoint.Invoke(message, logger, collector);
         }
 
         private static FunctionsAwareEndpoint endpoint;
@@ -43,7 +43,7 @@ namespace AsqFunctionApp
     {
         public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
         {
-            Console.Out.WriteLine("Place order!");
+            context.GetLogger().LogInformation("Place order!");
             
             await context.GetAsyncCollector<string>()
                 .AddAsync("some-payload"); //push stuff out via native connectors
@@ -57,7 +57,7 @@ namespace AsqFunctionApp
     {
         public Task Handle(SomeLocalMessage message, IMessageHandlerContext context)
         {
-            Console.Out.WriteLine("Got the local message");
+            context.GetLogger().LogInformation("Got the local message");
 
             return Task.CompletedTask;
         }

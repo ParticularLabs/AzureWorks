@@ -19,17 +19,15 @@ namespace AsqFunctionApp
             this.endpointInstance = endpointInstance;
         }
 
-        public Task Invoke(Message message, ILogger log, IAsyncCollector<string> collector)
+        public Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector)
         {
-            //TODO: marshal the logger
-
             var messageId = message.GetMessageId();
             var headers = message.GetNServiceBusHeaders();
             var body = message.GetBody();
 
             var rootContext = new ContextBag();
-
             rootContext.Set(collector);
+            rootContext.Set(logger);
 
             var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
 
