@@ -1,7 +1,6 @@
 using Microsoft.Azure.WebJobs;
-using NServiceBus;
 
-namespace AsqFunctionApp
+namespace NServiceBus
 {
     using Microsoft.Extensions.Logging;
 
