@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -28,21 +27,16 @@ namespace AsqFunctionApp
         }
 
         [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
-        public static Task Run([ServiceBusTrigger(endpointName, Connection = "my-sb-connstring")]Message message, ILogger log)
+        public static Task Run([ServiceBusTrigger(endpointName, Connection = "my-sb-connstring")]Message message, ILogger log, [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector)
         {
-            //todo: can't get the collector to work, fake for now
-            IAsyncCollector<string> collector = null;
-
             //todo: what if this was using a HttpTrigger
+
             return endpoint.Invoke(message, log, collector);
         }
 
         private static FunctionsAwareEndpoint endpoint;
 
-
         private const string endpointName = "sales";
-
-
     }
 
     class PlaceOrderHandler : IHandleMessages<PlaceOrder>
@@ -50,8 +44,9 @@ namespace AsqFunctionApp
         public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
         {
             Console.Out.WriteLine("Place order!");
-            //await context.GetAsyncCollector<string>()
-            //    .AddAsync("some-payload"); //push stuff out via native connectors
+            
+            await context.GetAsyncCollector<string>()
+                .AddAsync("some-payload"); //push stuff out via native connectors
 
             await context.Publish(new OrderPlaced());//emit messages to the ASB namespace we received the message from
             await context.SendLocal(new SomeLocalMessage());

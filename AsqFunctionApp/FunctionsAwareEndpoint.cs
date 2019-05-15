@@ -19,7 +19,7 @@ namespace AsqFunctionApp
             this.endpointInstance = endpointInstance;
         }
 
-        public Task Invoke<T>(Message message, ILogger log, IAsyncCollector<T> collector)
+        public Task Invoke(Message message, ILogger log, IAsyncCollector<string> collector)
         {
             //TODO: marshal the logger
 
