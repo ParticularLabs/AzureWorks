@@ -55,6 +55,8 @@ namespace NServiceBus
 
         Task<IEndpointInstance> InitializeEndpoint(ILogger logger, ExecutionContext executionContext)
         {
+            NServiceBus.Logging.LogManager.UseFactory(new MsExtLoggerFactory(logger));
+
             var ec = new EndpointConfiguration(endpointName);
 
             var configuration = new ConfigurationBuilder()
