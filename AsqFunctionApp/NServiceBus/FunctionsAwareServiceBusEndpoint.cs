@@ -18,7 +18,6 @@ namespace NServiceBus
     {
         public FunctionsAwareServiceBusEndpoint(string endpointName, string serviceBusConnectionStringName)
         {
-            this.endpointName = endpointName;
             this.serviceBusConnectionStringName = serviceBusConnectionStringName;
 
             endpointConfiguration = new EndpointConfiguration(endpointName);
@@ -41,7 +40,7 @@ namespace NServiceBus
 
             var instance = await GetEndpoint(logger, executionContext);
 
-            //TODO: error handling
+            //TODO: right now the native retries are used, should we have an option to move to "our" error?
             await instance.PushMessage(messageContext);
         }
 
@@ -54,7 +53,6 @@ namespace NServiceBus
 
         async Task<IEndpointInstance> GetEndpoint(ILogger logger, ExecutionContext executionContext)
         {
-
             //TODO: locking or lazy
             if (endpointInstance != null)
             {
@@ -89,7 +87,6 @@ namespace NServiceBus
         IEndpointInstance endpointInstance;
         TransportExtensions<AzureServiceBusTransport> transport;
 
-        readonly string endpointName;
         readonly string serviceBusConnectionStringName;
     }
 }
