@@ -26,12 +26,6 @@ namespace FunctionApp
              ILogger logger,
              ExecutionContext context)
         {
-            //string name = req.Query["name"];
-
-            //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            //dynamic data = JsonConvert.DeserializeObject(requestBody);
-            //name = name ?? data?.name;
-
             await endpoint.Send(new PlaceOrder(), logger, context);
 
             return new AcceptedResult();
