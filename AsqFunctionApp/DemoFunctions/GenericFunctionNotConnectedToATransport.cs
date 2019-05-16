@@ -1,22 +1,39 @@
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Extensions.Logging;
+using NServiceBus;
+
 namespace FunctionApp
 {
     public static class GenericFunctionNotConnectedToATransport
-
     {
+
         static GenericFunctionNotConnectedToATransport()
         {
-            //endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
+            endpoint = new FunctionsAwareServiceBusEndpointNoTransport(endpointName);
+
+            endpoint.Routing.RouteToEndpoint(typeof(PlaceOrder), endpointName); //route to our self just to demo
         }
 
-        //[FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
-        //public static Task Run([ServiceBusTrigger(endpointName, Connection = connectionStringName)]Message message,
-        //    [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector,
-        //    ILogger logger,
-        //    ExecutionContext context)
-        //{
-        //    return endpoint.Invoke(message, logger, collector, context);
-        //}
+        [FunctionName(endpointName)] //this is the "one function to all many handler for different messages"
+        public static async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
+            HttpRequest request,
+            ILogger logger,
+            ExecutionContext context)
+        {
+            await endpoint.Invoke(request.Body, logger, null, context);
 
-        //static FunctionsAwareServiceBusEndpoint endpoint;
+            return new AcceptedResult();
+        }
+
+        const string endpointName = "sales-http";
+
+        static readonly FunctionsAwareServiceBusEndpointNoTransport endpoint;
     }
 }
