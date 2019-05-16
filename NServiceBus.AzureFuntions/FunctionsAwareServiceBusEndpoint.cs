@@ -1,5 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Configuration;
@@ -40,6 +44,31 @@ namespace NServiceBus
             var instance = await GetEndpoint(logger, executionContext);
 
             //TODO: right now the native retries are used, should we have an option to move to "our" error?
+            await instance.PushMessage(messageContext);
+        }
+
+        public async Task Invoke(HttpRequest request, string messageType, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
+        {
+            var messageId = Guid.NewGuid().ToString("N");
+            var headers = new Dictionary<string, string> { [Headers.EnclosedMessageTypes] = messageType };
+
+            var memoryStream = new MemoryStream();
+
+            await request.Body.CopyToAsync(memoryStream);
+
+            var body = memoryStream.ToArray(); //JsonConvert.DeserializeObject(memoryStream.ToArray(), typeof(PlaceOrder)); // TODO: hardcoded, needs to be determined
+
+            var rootContext = new ContextBag();
+            if (collector == null)
+            {
+                collector = new FakeCollector<string>();
+            }
+            rootContext.Set(collector);
+
+            var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
+
+            var instance = await GetEndpoint(logger, executionContext);
+
             await instance.PushMessage(messageContext);
         }
 
