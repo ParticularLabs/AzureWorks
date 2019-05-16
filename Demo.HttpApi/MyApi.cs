@@ -72,10 +72,15 @@ class SomeMethodHandler:IHandleMessages<SomeMethod>
     public Task Handle(SomeMethod message, IMessageHandlerContext context)
     {
         logger.Info("SomeMethod called");
-        return Task.CompletedTask;
+
+        return context.SendLocal(new SomeMessage());
     }
 
     static ILog logger = LogManager.GetLogger<SomeMethodHandler>();
+}
+
+class SomeMessage
+{
 }
 
 class SomeOtherMethodHandler : IHandleMessages<SomeOtherMethod>
@@ -83,6 +88,18 @@ class SomeOtherMethodHandler : IHandleMessages<SomeOtherMethod>
     public Task Handle(SomeOtherMethod message, IMessageHandlerContext context)
     {
         logger.Info("SomeOtherMethod called");
+        return Task.CompletedTask;
+    }
+
+    static ILog logger = LogManager.GetLogger<SomeMethodHandler>();
+}
+
+
+class SomeMessageHandler : IHandleMessages<SomeMessage>
+{
+    public Task Handle(SomeMessage message, IMessageHandlerContext context)
+    {
+        logger.Info("SomeMessage called");
         return Task.CompletedTask;
     }
 
