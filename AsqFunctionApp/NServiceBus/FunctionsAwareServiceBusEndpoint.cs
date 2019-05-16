@@ -1,11 +1,9 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using NServiceBus;
 using NServiceBus.Extensibility;
 using NServiceBus.Transport;
 using NServiceBus.Transport.AzureServiceBus;
@@ -27,6 +25,7 @@ namespace NServiceBus
 
             Routing = transport.Routing();
         }
+
         public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
         {
             var messageId = message.GetMessageId();

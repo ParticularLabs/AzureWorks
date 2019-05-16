@@ -1,14 +1,5 @@
-using Microsoft.Azure.ServiceBus;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Extensions.Logging;
-using NServiceBus;
-using NServiceBus.Logging;
-
 namespace FunctionApp
 {
-    using System.Threading.Tasks;
-
-
     public static class GenericFunctionNotConnectedToATransport
 
     {
@@ -27,6 +18,5 @@ namespace FunctionApp
         //}
 
         //static FunctionsAwareServiceBusEndpoint endpoint;
-        const string endpointName = "sales";
     }
 }

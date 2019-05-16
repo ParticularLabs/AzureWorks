@@ -16,7 +16,7 @@ namespace FunctionApp
             endpoint.Routing.RouteToEndpoint(typeof(SomeRoutedMessage), endpointName); //route to our self just to demo
         }
 
-        [FunctionName(endpointName)]//this is the "one function to all many handler for different messages"
+        [FunctionName(endpointName)] //this is the "one function to all many handler for different messages"
         public static Task Run([ServiceBusTrigger(endpointName, Connection = connectionStringName)]Message message,
             [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector,
             ILogger logger,
