@@ -9,8 +9,7 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.24" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AsbTransport\NServiceBus.Transport.AzureServiceBus.csproj" />
-    <ProjectReference Include="..\NServiceBus.Core\NServiceBus.Core.csproj" />
+    <ProjectReference Include="..\NServiceBus.AzureFuntions\NServiceBus.AzureFuntions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

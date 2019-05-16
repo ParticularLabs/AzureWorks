@@ -1,52 +1,45 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using NServiceBus.Extensibility;
 using NServiceBus.Transport;
+using NServiceBus.Transport.AzureServiceBus;
 using NServiceBus.Configuration.AdvancedExtensibility;
 using ExecutionContext = Microsoft.Azure.WebJobs.ExecutionContext;
 
 namespace NServiceBus
 {
-    class FunctionsAwareServiceBusEndpointNoTransport
+    public class FunctionsAwareServiceBusEndpoint
     {
-        public FunctionsAwareServiceBusEndpointNoTransport(string endpointName)
+        public FunctionsAwareServiceBusEndpoint(string endpointName, string serviceBusConnectionStringName)
         {
+            this.serviceBusConnectionStringName = serviceBusConnectionStringName;
+
             endpointConfiguration = new EndpointConfiguration(endpointName);
             endpointConfiguration.GetSettings().Set("hack-do-not-use-the-pump", true);
 
-            transport = endpointConfiguration.UseTransport<LearningTransport>(); // TODO: create an "in-memory" transport?
-            transport.StorageDirectory(".");
+            transport = endpointConfiguration.UseTransport<AzureServiceBusTransport>();
 
             Routing = transport.Routing();
         }
 
-        public async Task Invoke(Stream message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
+        public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
         {
-            var messageId = Guid.NewGuid().ToString("N");
-            var headers = new Dictionary<string, string>();
-            var memoryStream = new MemoryStream();
-
-            await message.CopyToAsync(memoryStream);
-
-            var body = memoryStream.ToArray(); //JsonConvert.DeserializeObject(memoryStream.ToArray(), typeof(PlaceOrder)); // TODO: hardcoded, needs to be determined
+            var messageId = message.GetMessageId();
+            var headers = message.GetNServiceBusHeaders();
+            var body = message.GetBody();
 
             var rootContext = new ContextBag();
-            if (collector == null)
-            {
-                collector = new FakeCollector<string>();
-            }
             rootContext.Set(collector);
 
             var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
 
             var instance = await GetEndpoint(logger, executionContext);
 
+            //TODO: right now the native retries are used, should we have an option to move to "our" error?
             await instance.PushMessage(messageContext);
         }
 
@@ -74,6 +67,16 @@ namespace NServiceBus
         {
             NServiceBus.Logging.LogManager.UseFactory(new MsExtLoggerFactory(logger));
 
+
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(executionContext.FunctionDirectory)
+                .AddJsonFile("local.settings.json", optional: true, reloadOnChange: false)
+                .AddEnvironmentVariables()
+                .Build();
+
+            transport.ConnectionString(configuration[serviceBusConnectionStringName]);
+
+
             return Endpoint.Start(endpointConfiguration);
         }
 
@@ -81,19 +84,8 @@ namespace NServiceBus
 
         EndpointConfiguration endpointConfiguration;
         IEndpointInstance endpointInstance;
-        TransportExtensions<LearningTransport> transport;
-    }
+        TransportExtensions<AzureServiceBusTransport> transport;
 
-    class FakeCollector<T> : IAsyncCollector<T>
-    {
-        public Task AddAsync(T item, CancellationToken cancellationToken = new CancellationToken())
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task FlushAsync(CancellationToken cancellationToken = new CancellationToken())
-        {
-            return Task.CompletedTask;
-        }
+        readonly string serviceBusConnectionStringName;
     }
 }

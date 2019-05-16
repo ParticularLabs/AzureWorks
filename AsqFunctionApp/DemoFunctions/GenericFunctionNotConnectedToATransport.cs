@@ -27,7 +27,7 @@ namespace FunctionApp
             ILogger logger,
             ExecutionContext context)
         {
-            await endpoint.Invoke(request.Body, logger, null, context);
+            await endpoint.Invoke(request, logger, null, context);
 
             return new AcceptedResult();
         }
