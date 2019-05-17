@@ -8,6 +8,7 @@
     using System.Threading.Tasks;
     using DelayedDelivery;
     using Features;
+    using NServiceBus.MessageInterfaces;
     using Performance.TimeToBeReceived;
     using Routing;
     using Serialization;
@@ -20,7 +21,6 @@
         {
             this.settings = settings;
             this.connectionString = connectionString;
-            serializer = BuildSerializer(settings);
 
             settings.SetDefault(WellKnownConfigurationKeys.DelayedDelivery.EnableTimeoutManager, true);
 
@@ -34,7 +34,7 @@
             addressGenerator = new QueueAddressGenerator(settings.GetOrDefault<Func<string, string>>(WellKnownConfigurationKeys.QueueSanitizer));
         }
 
-        public override IEnumerable<Type> DeliveryConstraints => new List<Type> {typeof(DiscardIfNotReceivedBefore), typeof(NonDurableDelivery), typeof(DoNotDeliverBefore), typeof(DelayDeliveryWith)};
+        public override IEnumerable<Type> DeliveryConstraints => new List<Type> { typeof(DiscardIfNotReceivedBefore), typeof(NonDurableDelivery), typeof(DoNotDeliverBefore), typeof(DelayDeliveryWith) };
 
         public override TransportTransactionMode TransactionMode { get; } = TransportTransactionMode.ReceiveOnly;
         public override OutboundRoutingPolicy OutboundRoutingPolicy { get; } = new OutboundRoutingPolicy(OutboundRoutingType.Unicast, OutboundRoutingType.Unicast, OutboundRoutingType.Unicast);
@@ -78,7 +78,7 @@
                 {
                     var addressing = GetAddressing(settings, connectionString);
 
-                    var unwrapper = settings.HasSetting<IMessageEnvelopeUnwrapper>() ? settings.GetOrDefault<IMessageEnvelopeUnwrapper>() : new DefaultMessageEnvelopeUnwrapper(serializer);
+                    var unwrapper = EnvelopeWrapperBuilder.BuildUnwrapper(settings);
 
                     var maximumWaitTime = settings.Get<TimeSpan>(WellKnownConfigurationKeys.ReceiverMaximumWaitTimeWhenIdle);
                     var peekInterval = settings.Get<TimeSpan>(WellKnownConfigurationKeys.ReceiverPeekInterval);
@@ -125,16 +125,7 @@
             return addressing;
         }
 
-        static MessageWrapperSerializer BuildSerializer(ReadOnlySettings settings)
-        {
-            if (settings.TryGet<SerializationDefinition>(WellKnownConfigurationKeys.MessageWrapperSerializationDefinition, out var wrapperSerializer))
-            {
-                return new MessageWrapperSerializer(wrapperSerializer.Configure(settings)(MessageWrapperSerializer.GetMapper()));
-            }
-
-            return new MessageWrapperSerializer(AzureStorageQueueTransport.GetMainSerializer(MessageWrapperSerializer.GetMapper(), settings));
-        }
-
+      
         public override TransportSendInfrastructure ConfigureSendInfrastructure()
         {
             return new TransportSendInfrastructure(BuildDispatcher, () => Task.FromResult(NativeDelayDelivery.CheckForInvalidSettings(settings)));
@@ -143,7 +134,7 @@
         Dispatcher BuildDispatcher()
         {
             var addressing = GetAddressing(settings, connectionString);
-            return new Dispatcher(addressGenerator, addressing, serializer, delayedDelivery.ShouldDispatch);
+            return new Dispatcher(addressGenerator, addressing, EnvelopeWrapperBuilder.BuildWrapperSerializer(settings), delayedDelivery.ShouldDispatch);
         }
 
         public override TransportSubscriptionInfrastructure ConfigureSubscriptionInfrastructure()
@@ -214,10 +205,35 @@
 
         readonly ReadOnlySettings settings;
         readonly string connectionString;
-        readonly MessageWrapperSerializer serializer;
+        //  readonly MessageWrapperSerializer serializer;
         NativeDelayDelivery delayedDelivery;
         DelayedMessagesPoller poller;
         CancellationTokenSource nativeDelayedMessagesCancellationSource;
         QueueAddressGenerator addressGenerator;
+    }
+
+    public static class EnvelopeWrapperBuilder
+    {
+        public static IMessageEnvelopeUnwrapper BuildUnwrapper(ReadOnlySettings settings)
+        {
+            return settings.HasSetting<IMessageEnvelopeUnwrapper>() ? settings.GetOrDefault<IMessageEnvelopeUnwrapper>() : new DefaultMessageEnvelopeUnwrapper(BuildWrapperSerializer(settings));
+        }
+
+        internal static MessageWrapperSerializer BuildWrapperSerializer(ReadOnlySettings settings)
+        {
+            if (settings.TryGet<SerializationDefinition>(WellKnownConfigurationKeys.MessageWrapperSerializationDefinition, out var wrapperSerializer))
+            {
+                return new MessageWrapperSerializer(wrapperSerializer.Configure(settings)(MessageWrapperSerializer.GetMapper()));
+            }
+
+            var messageMapper = settings.Get<IMessageMapper>();
+            //var serializerDefinition = endpointConfiguration.GetSettings().GetMainSerializer();
+
+            if (!settings.TryGet("MainSerializer", out Tuple<SerializationDefinition, SettingsHolder> defaultSerializerAndSettings))            {                defaultSerializerAndSettings = Tuple.Create<SerializationDefinition, SettingsHolder>(new XmlSerializer(), new SettingsHolder());            }
+
+            var serializer = defaultSerializerAndSettings.Item1.Configure(settings)(messageMapper);
+
+            return new MessageWrapperSerializer(serializer);
+        }
     }
 }

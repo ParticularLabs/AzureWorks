@@ -3,7 +3,7 @@ namespace NServiceBus.Transport.AzureStorageQueues
     using Azure.Transports.WindowsAzureStorageQueues;
     using Microsoft.WindowsAzure.Storage.Queue;
 
-    interface IMessageEnvelopeUnwrapper
+    public interface IMessageEnvelopeUnwrapper
     {
         MessageWrapper Unwrap(CloudQueueMessage rawMessage);
     }

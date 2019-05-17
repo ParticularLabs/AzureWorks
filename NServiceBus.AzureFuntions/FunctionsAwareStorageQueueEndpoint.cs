@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -12,61 +7,49 @@ using NServiceBus.Extensibility;
 using NServiceBus.Transport;
 using NServiceBus.Transport.AzureServiceBus;
 using NServiceBus.Configuration.AdvancedExtensibility;
+using Microsoft.WindowsAzure.Storage.Queue;
 using ExecutionContext = Microsoft.Azure.WebJobs.ExecutionContext;
+using NServiceBus.Transport.AzureStorageQueues;
+using NServiceBus.Settings;
+using NServiceBus.MessageInterfaces;
+using NServiceBus.Serialization;
+using System;
+using NServiceBus.Features;
 
-namespace NServiceBus
+namespace NServiceBus.AzureFuntions
 {
-    public class FunctionsAwareServiceBusEndpoint
+    public class FunctionsAwareStorageQueueEndpoint
     {
-        public FunctionsAwareServiceBusEndpoint(string endpointName)
+        public FunctionsAwareStorageQueueEndpoint(string endpointName)
         {
             endpointConfiguration = new EndpointConfiguration(endpointName);
-            endpointConfiguration.GetSettings().Set("hack-do-not-use-the-pump", true);
 
-            transport = endpointConfiguration.UseTransport<AzureServiceBusTransport>();
+            endpointConfiguration.GetSettings().Set("hack-do-not-use-the-pump", true);
+            endpointConfiguration.UseSerialization<XmlSerializer>();
+            endpointConfiguration.UsePersistence<InMemoryPersistence>();
+            transport = endpointConfiguration.UseTransport<AzureStorageQueueTransport>();
+            transport.DelayedDelivery().DisableTimeoutManager();
 
             Routing = transport.Routing();
         }
 
-        public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
+        public async Task Invoke(CloudQueueMessage message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
         {
-            var messageId = message.GetMessageId();
-            var headers = message.GetNServiceBusHeaders();
-            var body = message.GetBody();
+            var instance = await GetEndpoint(logger, executionContext);
+
+            var messageId = message.Id;           
+
+            var unwrapped = unwrapper.Unwrap(message);
+
+            var headers = unwrapped.Headers;
+            var body = unwrapped.Body;
 
             var rootContext = new ContextBag();
             rootContext.Set(collector);
 
             var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
-
-            var instance = await GetEndpoint(logger, executionContext);
-
+            
             //TODO: right now the native retries are used, should we have an option to move to "our" error?
-            await instance.PushMessage(messageContext);
-        }
-
-        public async Task Invoke(HttpRequest request, string messageType, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
-        {
-            var messageId = Guid.NewGuid().ToString("N");
-            var headers = new Dictionary<string, string> { [Headers.EnclosedMessageTypes] = messageType };
-
-            var memoryStream = new MemoryStream();
-
-            await request.Body.CopyToAsync(memoryStream);
-
-            var body = memoryStream.ToArray(); //JsonConvert.DeserializeObject(memoryStream.ToArray(), typeof(PlaceOrder)); // TODO: hardcoded, needs to be determined
-
-            var rootContext = new ContextBag();
-            if (collector == null)
-            {
-                collector = new FakeCollector<string>();
-            }
-            rootContext.Set(collector);
-
-            var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
-
-            var instance = await GetEndpoint(logger, executionContext);
-
             await instance.PushMessage(messageContext);
         }
 
@@ -101,16 +84,21 @@ namespace NServiceBus
                 .AddEnvironmentVariables()
                 .Build();
 
-            transport.ConnectionString(configuration["my-sb-connstring"]);
+            transport.ConnectionString(configuration["AzureWebJobsStorage"]);
 
+            var instance = Endpoint.Start(endpointConfiguration);
 
-            return Endpoint.Start(endpointConfiguration);
+            unwrapper = EnvelopeWrapperBuilder.BuildUnwrapper(endpointConfiguration.GetSettings());
+
+            return instance;
+
         }
 
         public RoutingSettings Routing { get; }
 
         EndpointConfiguration endpointConfiguration;
         IEndpointInstance endpointInstance;
-        TransportExtensions<AzureServiceBusTransport> transport;
+        TransportExtensions<AzureStorageQueueTransport> transport;
+        IMessageEnvelopeUnwrapper unwrapper;
     }
 }

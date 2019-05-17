@@ -40,7 +40,7 @@ namespace NServiceBus
         {
             var definitionAndSettings = settings.Get<Tuple<SerializationDefinition, SettingsHolder>>(SerializerSettingsKey);
             var definition = definitionAndSettings.Item1;
-            var serializerSettings = definitionAndSettings.Item2;
+            var serializerSettings = definitionAndSettings.Item2; 
 
             // serializerSettings.Merge(settings);
             var merge = typeof(SettingsHolder).GetMethod("Merge", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
