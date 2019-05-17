@@ -13,7 +13,9 @@ using NServiceBus.Transport;
 using NServiceBus.Transport.AzureServiceBus;
 using NServiceBus.Configuration.AdvancedExtensibility;
 using NServiceBus.Unicast.Messages;
+using NServiceBus.Unicast;
 using ExecutionContext = Microsoft.Azure.WebJobs.ExecutionContext;
+
 
 namespace NServiceBus
 {
@@ -27,6 +29,9 @@ namespace NServiceBus
             transport = endpointConfiguration.UseTransport<AzureServiceBusTransport>();
 
             Routing = transport.Routing();
+
+            // TODO: fails to register behavior due to no found key (NServiceBus.Unicast.MessageHandlerRegistry)
+            // WarnAgainstMultipleHandlersForSameMessageType();
         }
 
         public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
@@ -79,6 +84,16 @@ namespace NServiceBus
 
                 return new PassThroughBehavior(registry, routingRule);
             },  "Forwards unknown messages to the configured destination");
+        }
+
+        void WarnAgainstMultipleHandlersForSameMessageType()
+        {
+            endpointConfiguration.Pipeline.Register(builder =>
+            {
+                var registry = endpointConfiguration.GetSettings().Get<MessageHandlerRegistry>();
+
+                return new WarnAgainstMultipleHandlersForSameMessageTypeBehavior(registry);
+            }, "Warns against multiple handlers for same message type");
         }
 
         public async Task Send<T>(T message, ILogger logger, ExecutionContext executionContext)
