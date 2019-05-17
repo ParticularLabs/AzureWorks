@@ -18,10 +18,8 @@ namespace NServiceBus
 {
     public class FunctionsAwareServiceBusEndpoint
     {
-        public FunctionsAwareServiceBusEndpoint(string endpointName, string serviceBusConnectionStringName)
+        public FunctionsAwareServiceBusEndpoint(string endpointName)
         {
-            this.serviceBusConnectionStringName = serviceBusConnectionStringName;
-
             endpointConfiguration = new EndpointConfiguration(endpointName);
             endpointConfiguration.GetSettings().Set("hack-do-not-use-the-pump", true);
 
@@ -103,7 +101,7 @@ namespace NServiceBus
                 .AddEnvironmentVariables()
                 .Build();
 
-            transport.ConnectionString(configuration[serviceBusConnectionStringName]);
+            transport.ConnectionString(configuration["NServiceBus:ConnectionString"]);
 
 
             return Endpoint.Start(endpointConfiguration);
@@ -114,7 +112,5 @@ namespace NServiceBus
         EndpointConfiguration endpointConfiguration;
         IEndpointInstance endpointInstance;
         TransportExtensions<AzureServiceBusTransport> transport;
-
-        readonly string serviceBusConnectionStringName;
     }
 }

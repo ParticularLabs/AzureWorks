@@ -15,7 +15,7 @@ namespace FunctionApp
     {
         static HttpEmittingMessagesToAsb()
         {
-            endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
+            endpoint = new FunctionsAwareServiceBusEndpoint(endpointName);
 
             endpoint.Routing.RouteToEndpoint(typeof(PlaceOrder), endpointName); //route to our self just to demo
         }
@@ -39,6 +39,5 @@ namespace FunctionApp
         static FunctionsAwareServiceBusEndpoint endpoint;
 
         const string endpointName = "sales";
-        const string connectionStringName = "my-sb-connstring";
     }
 }

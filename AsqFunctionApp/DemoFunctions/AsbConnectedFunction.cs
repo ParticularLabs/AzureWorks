@@ -11,14 +11,14 @@ namespace FunctionApp
     {
         static AsbConnectedFunction()
         {
-            endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
+            endpoint = new FunctionsAwareServiceBusEndpoint(endpointName);
 
             endpoint.Routing.RouteToEndpoint(typeof(SomeRoutedMessage), endpointName); //route to our self just to demo
         }
 
         [FunctionName(endpointName)] //this is the "one function to all many handler for different messages"
         public static Task Run([ServiceBusTrigger(endpointName, Connection = connectionStringName)]Message message,
-            [ServiceBus("some-queue", Connection = "my-sb-connstring")]IAsyncCollector<string> collector,
+            [ServiceBus("some-queue", Connection = connectionStringName)]IAsyncCollector<string> collector,
             ILogger logger,
             ExecutionContext context)
         {
@@ -28,6 +28,6 @@ namespace FunctionApp
         static FunctionsAwareServiceBusEndpoint endpoint;
 
         const string endpointName = "sales";
-        const string connectionStringName = "my-sb-connstring";
+        const string connectionStringName = "NServiceBus:ConnectionString";
     }
 }

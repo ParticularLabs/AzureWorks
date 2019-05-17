@@ -14,7 +14,7 @@ namespace Demo.HttpApi
 
         static MyApi()
         {
-            endpoint = new FunctionsAwareServiceBusEndpoint(endpointName, connectionStringName);
+            endpoint = new FunctionsAwareServiceBusEndpoint(endpointName);
         }
 
         [FunctionName(endpointName)] //this is the "one function to all many handler for different messages"
@@ -55,7 +55,6 @@ namespace Demo.HttpApi
         const string endpointName = "my-api";
 
         static readonly FunctionsAwareServiceBusEndpoint endpoint;
-        const string connectionStringName = "my-sb-connstring";
     }
 }
 
