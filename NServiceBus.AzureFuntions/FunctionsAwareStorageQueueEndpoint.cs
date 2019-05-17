@@ -84,7 +84,7 @@ namespace NServiceBus.AzureFuntions
                 .AddEnvironmentVariables()
                 .Build();
 
-            transport.ConnectionString(configuration["AzureWebJobsStorage"]);
+            transport.ConnectionString(configuration[FunctionsConstants.StorageConnectionString]);
 
             var instance = Endpoint.Start(endpointConfiguration);
 

@@ -6,15 +6,21 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
 using NServiceBus.Logging;
+using NServiceBus.Unicast.Subscriptions;
 
 namespace Demo.HttpApi
 {
     public static class MyApi
     {
-
         static MyApi()
         {
             endpoint = new FunctionsAwareServiceBusEndpoint(endpointName);
+
+            endpoint.EnablePassThroughRoutingForUnknownMessages(messageType =>
+            {
+                //route everything to a backend function
+                return "my-api-backend";
+            });
         }
 
         [FunctionName(endpointName)] //this is the "one function to all many handler for different messages"
