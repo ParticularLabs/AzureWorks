@@ -1,6 +1,5 @@
 namespace FunctionApp
 {
-    using Microsoft.Azure.ServiceBus;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Extensions.Logging;
     using NServiceBus;
