@@ -25,7 +25,7 @@ namespace FunctionApp
         //  Show outbox deduplication via http header
         //  Show error queue usage to not loose http requests
         //  Show exposing a "http api" that does "1 to many"
-        [FunctionName("asb-placeOrder")]
+        [FunctionName("placeOrder")]
         public static async Task<IActionResult> Run(
              [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
              ILogger logger,
