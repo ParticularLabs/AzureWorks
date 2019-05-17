@@ -1,12 +1,11 @@
-namespace FunctionApp
+namespace Demo.ASB
 {
+    using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Extensions.Logging;
     using NServiceBus;
-    using System.Threading.Tasks;
 
- 
     public static class AsbConnectedFunction
     {
         static AsbConnectedFunction()
@@ -27,6 +26,6 @@ namespace FunctionApp
 
         static readonly FunctionsAwareServiceBusEndpoint endpoint;
 
-        const string endpointName = "sales-asb";
+        const string endpointName = "sales";
     }
 }

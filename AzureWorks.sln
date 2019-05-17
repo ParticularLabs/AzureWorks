@@ -11,9 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NServiceBus.Transport.Azure
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NServiceBus.AzureStorageQueues", "AsqTransport\NServiceBus.AzureStorageQueues.csproj", "{8E682997-0CE2-4D81-840F-C7B37AC9E6A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.AzureFuntions", "NServiceBus.AzureFuntions\NServiceBus.AzureFuntions.csproj", "{405B192D-61E9-4FB7-9C2D-04F0491AE1EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NServiceBus.AzureFuntions", "NServiceBus.AzureFuntions\NServiceBus.AzureFuntions.csproj", "{405B192D-61E9-4FB7-9C2D-04F0491AE1EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.HttpApi", "Demo.HttpApi\Demo.HttpApi.csproj", "{6237A993-349F-41A0-923F-AAE597BEE1CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.HttpApi", "Demo.HttpApi\Demo.HttpApi.csproj", "{6237A993-349F-41A0-923F-AAE597BEE1CC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.ASB", "Demo.ASB\Demo.ASB.csproj", "{B0BA302C-180D-45CE-B0C9-3548C5CC89C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{6237A993-349F-41A0-923F-AAE597BEE1CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6237A993-349F-41A0-923F-AAE597BEE1CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6237A993-349F-41A0-923F-AAE597BEE1CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0BA302C-180D-45CE-B0C9-3548C5CC89C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0BA302C-180D-45CE-B0C9-3548C5CC89C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0BA302C-180D-45CE-B0C9-3548C5CC89C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0BA302C-180D-45CE-B0C9-3548C5CC89C3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
