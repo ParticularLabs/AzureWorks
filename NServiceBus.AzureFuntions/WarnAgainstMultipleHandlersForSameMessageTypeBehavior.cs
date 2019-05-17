@@ -22,7 +22,7 @@ namespace NServiceBus
             
             if (numberOfHandlers > 1)
             {
-                logger.WarnFormat("Message of type {0} is handled by more that a single handler ({1}). Ensure transport supports transactions or retried to have more than one handler or break down into multiple message types passed from one handler to another."
+                logger.WarnFormat("Message of type '{0}' is handled by more than a single handler ({1}). Ensure transport supports transactions or capable of retries to have more than one handler. Otherwise break down into multiple message types each handled by a separate handler."
                     , type, numberOfHandlers);
             }
 

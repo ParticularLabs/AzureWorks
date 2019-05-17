@@ -30,8 +30,7 @@ namespace NServiceBus
 
             Routing = transport.Routing();
 
-            // TODO: fails to register behavior due to no found key (NServiceBus.Unicast.MessageHandlerRegistry)
-            // WarnAgainstMultipleHandlersForSameMessageType();
+            WarnAgainstMultipleHandlersForSameMessageType();
         }
 
         public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
@@ -88,12 +87,7 @@ namespace NServiceBus
 
         void WarnAgainstMultipleHandlersForSameMessageType()
         {
-            endpointConfiguration.Pipeline.Register(builder =>
-            {
-                var registry = endpointConfiguration.GetSettings().Get<MessageHandlerRegistry>();
-
-                return new WarnAgainstMultipleHandlersForSameMessageTypeBehavior(registry);
-            }, "Warns against multiple handlers for same message type");
+            endpointConfiguration.Pipeline.Register(builder => new WarnAgainstMultipleHandlersForSameMessageTypeBehavior(builder.Build<MessageHandlerRegistry>()), "Warns against multiple handlers for same message type");
         }
 
         public async Task Send<T>(T message, ILogger logger, ExecutionContext executionContext)
