@@ -5,19 +5,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NServiceBus.Extensibility;
 using NServiceBus.Transport;
-using NServiceBus.Transport.AzureServiceBus;
 using NServiceBus.Configuration.AdvancedExtensibility;
 using Microsoft.WindowsAzure.Storage.Queue;
 using ExecutionContext = Microsoft.Azure.WebJobs.ExecutionContext;
 using NServiceBus.Transport.AzureStorageQueues;
-using NServiceBus.Settings;
-using NServiceBus.MessageInterfaces;
-using NServiceBus.Serialization;
-using System;
-using NServiceBus.Features;
 
 namespace NServiceBus.AzureFuntions
 {
+    using System;
+    using Unicast.Messages;
+
     public class FunctionsAwareStorageQueueEndpoint
     {
         public FunctionsAwareStorageQueueEndpoint(string endpointName)
@@ -51,6 +48,16 @@ namespace NServiceBus.AzureFuntions
             
             //TODO: right now the native retries are used, should we have an option to move to "our" error?
             await instance.PushMessage(messageContext);
+        }
+
+        public void EnablePassThroughRoutingForUnknownMessages(Func<string, string> routingRule)
+        {
+            endpointConfiguration.Pipeline.Register(b =>
+            {
+                var registry = endpointConfiguration.GetSettings().Get<MessageMetadataRegistry>();
+
+                return new PassThroughBehavior(registry, routingRule);
+            }, "Forwards unknown messages to the configured destination");
         }
 
         public async Task Send<T>(T message, ILogger logger, ExecutionContext executionContext)
