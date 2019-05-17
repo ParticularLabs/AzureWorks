@@ -12,6 +12,8 @@ using NServiceBus.Extensibility;
 using NServiceBus.Transport;
 using NServiceBus.Transport.AzureServiceBus;
 using NServiceBus.Configuration.AdvancedExtensibility;
+using NServiceBus.Pipeline;
+using NServiceBus.Unicast.Messages;
 using ExecutionContext = Microsoft.Azure.WebJobs.ExecutionContext;
 
 namespace NServiceBus
@@ -70,6 +72,16 @@ namespace NServiceBus
             await instance.PushMessage(messageContext);
         }
 
+        public void EnablePassThroughRoutingForUnknownMessages(Func<string, string> routingRule)
+        {
+            endpointConfiguration.Pipeline.Register(b=>
+            {
+                var registry = endpointConfiguration.GetSettings().Get<MessageMetadataRegistry>();
+
+                return new PassThroughBehavior(registry, routingRule);
+            },  "Forwards unknown messages to the configured destination");
+        }
+
         public async Task Send<T>(T message, ILogger logger, ExecutionContext executionContext)
         {
             var instance = await GetEndpoint(logger, executionContext);
@@ -112,5 +124,33 @@ namespace NServiceBus
         EndpointConfiguration endpointConfiguration;
         IEndpointInstance endpointInstance;
         TransportExtensions<AzureServiceBusTransport> transport;
+
+        private Func<string, string> passThroughRoutingRule;
+    }
+
+    public class PassThroughBehavior : Behavior<IIncomingPhysicalMessageContext>
+    {
+        private readonly MessageMetadataRegistry messageMetadataRegistry;
+        private readonly Func<string, string> passThroughRoutingRule;
+
+        public PassThroughBehavior(MessageMetadataRegistry messageMetadataRegistry, Func<string,string> passThroughRoutingRule)
+        {
+            this.messageMetadataRegistry = messageMetadataRegistry;
+            this.passThroughRoutingRule = passThroughRoutingRule;
+        }
+
+        public override Task Invoke(IIncomingPhysicalMessageContext context, Func<Task> next)
+        {
+            var messageType = context.MessageHeaders[Headers.EnclosedMessageTypes];
+            var messageMetadata = messageMetadataRegistry.GetMessageMetadata(messageType);
+
+            if (messageMetadata == null)
+            {
+                var destination = passThroughRoutingRule(messageType);
+                return context.ForwardCurrentMessageTo(destination);
+            }
+
+            return next();
+        }
     }
 }
