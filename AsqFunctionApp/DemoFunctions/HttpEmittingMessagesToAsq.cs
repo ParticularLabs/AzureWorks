@@ -3,13 +3,11 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NServiceBus.AzureFuntions;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace FunctionApp
 {
-    using Microsoft.AspNetCore.Mvc;
-    using System.Threading.Tasks;
-
-
     //TODO: create a collector transport?
     public static class HttpEmittingMessagesToAsq
     {
