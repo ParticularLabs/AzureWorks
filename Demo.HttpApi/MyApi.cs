@@ -38,7 +38,7 @@ namespace Demo.HttpApi
 
         //do not use messaging for queries
         [FunctionName("GetProducts")]
-        public static async Task<IActionResult> GetProducts(
+        public static IActionResult GetProducts(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "products")]HttpRequest request)
         {
            return new ContentResult
@@ -49,7 +49,7 @@ namespace Demo.HttpApi
 
         //do not use messaging for queries
         [FunctionName("GetOrders")]
-        public static async Task<IActionResult> GetOrders(
+        public static IActionResult GetOrders(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "orders")]HttpRequest request)
         {
             return new ContentResult
