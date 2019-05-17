@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using NServiceBus.Extensibility;
 using NServiceBus.Transport;
 using NServiceBus.Configuration.AdvancedExtensibility;
@@ -21,8 +20,8 @@ namespace NServiceBus
             endpointConfiguration = new EndpointConfiguration(endpointName);
             endpointConfiguration.GetSettings().Set("hack-do-not-use-the-pump", true);
 
-            transport = endpointConfiguration.UseTransport<LearningTransport>(); // TODO: create an "in-memory" transport?
-            transport.StorageDirectory(".");
+            transport = endpointConfiguration.UseTransport<NoopTransport>();
+            transport.ConnectionString("no-op");
 
             Routing = transport.Routing();
         }
@@ -82,7 +81,7 @@ namespace NServiceBus
 
         EndpointConfiguration endpointConfiguration;
         IEndpointInstance endpointInstance;
-        TransportExtensions<LearningTransport> transport;
+        TransportExtensions<NoopTransport> transport;
     }
 
     class FakeCollector<T> : IAsyncCollector<T>
