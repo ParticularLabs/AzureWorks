@@ -2,7 +2,6 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using NServiceBus;
 using NServiceBus.AzureFuntions;
 
 namespace FunctionApp
@@ -28,7 +27,7 @@ namespace FunctionApp
         //  Show exposing a "http api" that does "1 to many"
         [FunctionName("asq-placeOrder")]
         public static async Task<IActionResult> Run(
-             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
              ILogger logger,
              ExecutionContext context)
         {
