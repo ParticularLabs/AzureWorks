@@ -101,7 +101,7 @@ namespace NServiceBus
                 .AddEnvironmentVariables()
                 .Build();
 
-            transport.ConnectionString(configuration["NServiceBus:ConnectionString"]);
+            transport.ConnectionString(configuration[NServiceBus.FunctionsConstants.ConnectionString]);
 
 
             return Endpoint.Start(endpointConfiguration);
