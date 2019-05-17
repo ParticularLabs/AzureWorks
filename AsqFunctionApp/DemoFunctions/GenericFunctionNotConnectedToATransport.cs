@@ -15,7 +15,7 @@ namespace FunctionApp
 
         static GenericFunctionNotConnectedToATransport()
         {
-            endpoint = new FunctionsAwareServiceBusEndpointNoTransport(endpointName);
+            endpoint = new FunctionsAwareEndpointNoTransport(endpointName);
 
             endpoint.Routing.RouteToEndpoint(typeof(PlaceOrder), endpointName); //route to our self just to demo
         }
@@ -34,6 +34,6 @@ namespace FunctionApp
 
         const string endpointName = "sales-http";
 
-        static readonly FunctionsAwareServiceBusEndpointNoTransport endpoint;
+        static readonly FunctionsAwareEndpointNoTransport endpoint;
     }
 }
