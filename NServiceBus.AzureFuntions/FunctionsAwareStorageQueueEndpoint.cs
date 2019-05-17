@@ -84,7 +84,7 @@ namespace NServiceBus.AzureFuntions
                 .AddEnvironmentVariables()
                 .Build();
 
-            transport.ConnectionString(configuration[FunctionsConstants.StorageConnectionString]);
+            transport.ConnectionString(configuration[FunctionsConstants.ConnectionString]);
 
             var instance = Endpoint.Start(endpointConfiguration);
 

@@ -18,8 +18,8 @@ namespace FunctionApp
         }
 
         [FunctionName(endpointName)] //this is the "one function to all many handler for different messages"
-        public static Task Run([QueueTrigger(endpointName, Connection = FunctionsConstants.StorageConnectionString)]CloudQueueMessage message,
-            [Queue("some-queue", Connection = FunctionsConstants.StorageConnectionString)]IAsyncCollector<string> collector,
+        public static Task Run([QueueTrigger(endpointName, Connection = FunctionsConstants.ConnectionString)]CloudQueueMessage message,
+            [Queue("some-queue", Connection = FunctionsConstants.ConnectionString)]IAsyncCollector<string> collector,
             ILogger logger,
             ExecutionContext context)
         {
