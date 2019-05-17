@@ -35,23 +35,5 @@ namespace NServiceBus
 
             return new AzureStorageQueueInfrastructure(settings, connectionString);
         }
-
-        internal static IMessageSerializer GetMainSerializer(IMessageMapper mapper, ReadOnlySettings settings)
-        {
-            var definitionAndSettings = settings.Get<Tuple<SerializationDefinition, SettingsHolder>>(SerializerSettingsKey);
-            var definition = definitionAndSettings.Item1;
-            var serializerSettings = definitionAndSettings.Item2; 
-
-            // serializerSettings.Merge(settings);
-            var merge = typeof(SettingsHolder).GetMethod("Merge", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            merge.Invoke(serializerSettings, new object[]
-            {
-                settings
-            });
-
-            var serializerFactory = definition.Configure(serializerSettings);
-            var serializer = serializerFactory(mapper);
-            return serializer;
-        }
     }
 }

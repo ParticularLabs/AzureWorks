@@ -229,7 +229,7 @@
             var messageMapper = settings.Get<IMessageMapper>();
             //var serializerDefinition = endpointConfiguration.GetSettings().GetMainSerializer();
 
-            if (!settings.TryGet("MainSerializer", out Tuple<SerializationDefinition, SettingsHolder> defaultSerializerAndSettings))            {                defaultSerializerAndSettings = Tuple.Create<SerializationDefinition, SettingsHolder>(new XmlSerializer(), new SettingsHolder());            }
+            if (!settings.TryGet(AzureStorageQueueTransport.SerializerSettingsKey, out Tuple<SerializationDefinition, SettingsHolder> defaultSerializerAndSettings))            {                defaultSerializerAndSettings = Tuple.Create<SerializationDefinition, SettingsHolder>(new XmlSerializer(), new SettingsHolder());            }
 
             var serializer = defaultSerializerAndSettings.Item1.Configure(settings)(messageMapper);
 
