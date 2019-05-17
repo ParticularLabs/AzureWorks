@@ -13,9 +13,9 @@ using ExecutionContext = Microsoft.Azure.WebJobs.ExecutionContext;
 
 namespace NServiceBus
 {
-    public class FunctionsAwareServiceBusEndpointNoTransport
+    public class FunctionsAwareEndpointNoTransport
     {
-        public FunctionsAwareServiceBusEndpointNoTransport(string endpointName)
+        public FunctionsAwareEndpointNoTransport(string endpointName)
         {
             endpointConfiguration = new EndpointConfiguration(endpointName);
             endpointConfiguration.GetSettings().Set("hack-do-not-use-the-pump", true);
