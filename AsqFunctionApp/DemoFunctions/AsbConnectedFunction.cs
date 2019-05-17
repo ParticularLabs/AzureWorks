@@ -25,7 +25,7 @@ namespace FunctionApp
             return endpoint.Invoke(message, logger, collector, context);
         }
 
-        static FunctionsAwareServiceBusEndpoint endpoint;
+        static readonly FunctionsAwareServiceBusEndpoint endpoint;
 
         const string endpointName = "sales";
     }
