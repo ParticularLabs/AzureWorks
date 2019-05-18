@@ -1,12 +1,12 @@
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
-namespace FunctionApp
+namespace Demo.ASB
 {
     //TODO: create a collector transport?
     public static class HttpEmittingMessagesToAsb

@@ -1,4 +1,4 @@
-namespace FunctionApp
+namespace Demo.ASQ
 {
     using Microsoft.Azure.WebJobs;
     using Microsoft.Extensions.Logging;

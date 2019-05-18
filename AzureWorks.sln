@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.HttpApi", "Demo.HttpAp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.ASB", "Demo.ASB\Demo.ASB.csproj", "{B0BA302C-180D-45CE-B0C9-3548C5CC89C3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.ASQ", "Demo.ASQ\Demo.ASQ.csproj", "{78A3C5D6-3A1B-4086-B0EF-40AA0AD5F2D9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{B0BA302C-180D-45CE-B0C9-3548C5CC89C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B0BA302C-180D-45CE-B0C9-3548C5CC89C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B0BA302C-180D-45CE-B0C9-3548C5CC89C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78A3C5D6-3A1B-4086-B0EF-40AA0AD5F2D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78A3C5D6-3A1B-4086-B0EF-40AA0AD5F2D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78A3C5D6-3A1B-4086-B0EF-40AA0AD5F2D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78A3C5D6-3A1B-4086-B0EF-40AA0AD5F2D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

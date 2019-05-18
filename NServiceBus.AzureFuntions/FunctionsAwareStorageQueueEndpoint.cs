@@ -9,6 +9,7 @@ using NServiceBus.Configuration.AdvancedExtensibility;
 using Microsoft.WindowsAzure.Storage.Queue;
 using ExecutionContext = Microsoft.Azure.WebJobs.ExecutionContext;
 using NServiceBus.Transport.AzureStorageQueues;
+using NServiceBus.Unicast;
 
 namespace NServiceBus.AzureFuntions
 {
@@ -28,6 +29,8 @@ namespace NServiceBus.AzureFuntions
             transport.DelayedDelivery().DisableTimeoutManager();
 
             Routing = transport.Routing();
+
+            WarnAgainstMultipleHandlersForSameMessageType();
         }
 
         public async Task Invoke(CloudQueueMessage message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
@@ -58,6 +61,11 @@ namespace NServiceBus.AzureFuntions
 
                 return new PassThroughBehavior(registry, routingRule);
             }, "Forwards unknown messages to the configured destination");
+        }
+
+        void WarnAgainstMultipleHandlersForSameMessageType()
+        {
+            endpointConfiguration.Pipeline.Register(builder => new WarnAgainstMultipleHandlersForSameMessageTypeBehavior(builder.Build<MessageHandlerRegistry>()), "Warns against multiple handlers for same message type");
         }
 
         public async Task Send<T>(T message, ILogger logger, ExecutionContext executionContext)

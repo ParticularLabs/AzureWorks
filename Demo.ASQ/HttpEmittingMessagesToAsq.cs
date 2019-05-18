@@ -6,7 +6,7 @@ using NServiceBus.AzureFuntions;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
-namespace FunctionApp
+namespace Demo.ASQ
 {
     //TODO: create a collector transport?
     public static class HttpEmittingMessagesToAsq
