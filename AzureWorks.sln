@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.202
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunctionApp", "AsqFunctionApp\FunctionApp.csproj", "{151688C0-FADA-45E0-A2E5-6A5250C7FC26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.GenericFunction", "AsqFunctionApp\Demo.GenericFunction.csproj", "{151688C0-FADA-45E0-A2E5-6A5250C7FC26}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NServiceBus.Core", "NServiceBus.Core\NServiceBus.Core.csproj", "{06B1AE93-E98E-4436-BBD6-D596EAE5DED9}"
 EndProject
