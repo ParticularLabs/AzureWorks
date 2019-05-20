@@ -123,6 +123,15 @@ namespace NServiceBus
                     var x = deserializedMessages[i];
                     logicalMessages[i] = logicalMessageFactory.Create(x.GetType(), x);
                 }
+
+                //TODO: Hack to make messages show up nicely in SI and SP
+                if (!physicalMessage.Headers.ContainsKey(Headers.EnclosedMessageTypes))
+                {
+                    physicalMessage.Headers[Headers.EnclosedMessageTypes] = string.Join(",",
+                        deserializedMessages.Select(t => t.GetType().FullName));
+                }
+                
+
                 return logicalMessages;
             }
         }

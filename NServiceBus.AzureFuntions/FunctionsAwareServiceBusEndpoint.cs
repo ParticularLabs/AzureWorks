@@ -40,6 +40,12 @@ namespace NServiceBus
             var headers = message.GetNServiceBusHeaders();
             var body = message.GetBody();
 
+            if (!headers.ContainsKey(Headers.ConversationId))
+            {
+                headers[Headers.ConversationId] = messageId;
+            }
+
+
             var rootContext = new ContextBag();
             if (collector == null)
             {
@@ -146,6 +152,11 @@ namespace NServiceBus
             });
 
             moveFailedMessagesToError = true;
+        }
+
+        public void UseNServiceBusAuditQueue(string auditQueue)
+        {
+            endpointConfiguration.AuditProcessedMessagesTo(auditQueue);
         }
 
         public void EnablePassThroughRoutingForUnknownMessages(Func<string, string> routingRule)

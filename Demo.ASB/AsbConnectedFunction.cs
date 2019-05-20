@@ -16,6 +16,8 @@ namespace Demo.ASB
 
             //use NSB for poison message handling to not have failed messages go into the DLQ
             endpoint.UseNServiceBusPoisonMessageHandling("error");
+
+            endpoint.UseNServiceBusAuditQueue("audit");
         }
 
         [FunctionName(endpointName)] // this is the "one function to all handlers for different messages" - A junction function
