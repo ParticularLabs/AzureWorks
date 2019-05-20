@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.ServiceBus;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
 
@@ -19,19 +20,27 @@ namespace Demo.HttpApi
                 //route everything to a backend function
                 return "my-api-backend";
             });
+
+            endpoint.UseNServiceBusPoisonMessageHandling("error");
         }
 
-        [FunctionName(endpointName)] //this is the "one function to all many handler for different messages"
-        public static async Task<IActionResult> ApiInputCatchAll(
+        [FunctionName("my-api-http-input")] //this is the "one function to all many handler for different messages"
+        public static Task<IActionResult> ApiInputCatchAll(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "{messagetype}")]
             HttpRequest request,
             string messagetype,
             ILogger logger,
             ExecutionContext context)
         {
-            await endpoint.Invoke(request, messagetype, logger, null, context);
+            return endpoint.Invoke(request, messagetype, logger, null, context);
+        }
 
-            return new AcceptedResult();
+        [FunctionName(endpointName)] // this is the "one function to all handlers for different messages" - A junction function
+        public static Task Run([ServiceBusTrigger(endpointName, Connection = FunctionsConstants.ConnectionString)]Message message,
+            ILogger logger,
+            ExecutionContext context)
+        {
+            return endpoint.Invoke(message, logger, null, context);
         }
 
         //do not use messaging for queries

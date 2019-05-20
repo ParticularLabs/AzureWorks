@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Configuration;
@@ -40,6 +41,10 @@ namespace NServiceBus
             var body = message.GetBody();
 
             var rootContext = new ContextBag();
+            if (collector == null)
+            {
+                collector = new FakeCollector<string>();
+            }
             rootContext.Set(collector);
 
             var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
@@ -73,10 +78,15 @@ namespace NServiceBus
             }
         }
 
-        public async Task Invoke(HttpRequest request, string messageType, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
+        public async Task<IActionResult> Invoke(HttpRequest request, string messageType, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
         {
             var messageId = Guid.NewGuid().ToString("N");
             var headers = new Dictionary<string, string> { [Headers.EnclosedMessageTypes] = messageType };
+
+            foreach (var httpHeader in request.Headers)
+            {
+                headers[httpHeader.Key] = httpHeader.Value;
+            }
 
             var memoryStream = new MemoryStream();
 
@@ -95,7 +105,30 @@ namespace NServiceBus
 
             var instance = await GetEndpoint(logger, executionContext);
 
-            await instance.PushMessage(messageContext);
+            try
+            {
+                await instance.PushMessage(messageContext);
+            }
+            catch (Exception ex)
+            {
+                if (moveFailedMessagesToError)
+                {
+                    var errorContext = new ErrorContext(ex, headers, messageId, body, new TransportTransaction(), 0);
+
+                    var result = await instance.PushError(errorContext);
+
+                    if (result == ErrorHandleResult.RetryRequired)
+                    {
+                        throw;
+                    }
+
+                    return new AcceptedResult();
+                }
+
+                throw;
+            }
+
+            return new OkResult();
         }
 
         public async Task Send<T>(T message, ILogger logger, ExecutionContext executionContext)
