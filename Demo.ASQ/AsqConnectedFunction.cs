@@ -27,6 +27,6 @@ namespace Demo.ASQ
 
         static readonly FunctionsAwareStorageQueueEndpoint endpoint;
 
-        const string endpointName = "sales-asq";
+        const string endpointName = "sales";
     }
 }

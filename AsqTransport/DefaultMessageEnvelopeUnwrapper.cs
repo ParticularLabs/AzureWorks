@@ -25,6 +25,16 @@ namespace NServiceBus.Transport.AzureStorageQueues
                 throw new SerializationException("Message is null");
             }
 
+            //TODO: We should raise a dev ex issue for this since we should consider this change since it helps native integrations
+            if (m.Headers == null)
+            {
+                //not a NSB envelope
+                return new MessageWrapper
+                {
+                    Body = rawMessage.AsBytes
+                };
+            }
+
             if (m.ReplyToAddress != null)
             {
                 m.Headers[Headers.ReplyToAddress] = m.ReplyToAddress;

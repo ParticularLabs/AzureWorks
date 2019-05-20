@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Configuration;
@@ -41,7 +42,7 @@ namespace NServiceBus.AzureFuntions
 
             var unwrapped = unwrapper.Unwrap(message);
 
-            var headers = unwrapped.Headers;
+            var headers = unwrapped.Headers ?? new Dictionary<string, string>();
             var body = unwrapped.Body;
 
             var rootContext = new ContextBag();
