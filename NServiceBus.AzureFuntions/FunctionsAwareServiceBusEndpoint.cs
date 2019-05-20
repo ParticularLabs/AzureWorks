@@ -46,8 +46,31 @@ namespace NServiceBus
 
             var instance = await GetEndpoint(logger, executionContext);
 
-            //TODO: right now the native retries are used, should we have an option to move to "our" error?
-            await instance.PushMessage(messageContext);
+
+            try
+            {
+                await instance.PushMessage(messageContext);
+            }
+            catch (Exception ex)
+            {
+                // TODO: is 4 the right value?
+                // TODO: Should we provide delayed retries as well?
+                if (moveFailedMessagesToError && message.SystemProperties.DeliveryCount > 4)
+                {
+                    var errorContext = new ErrorContext(ex, headers, messageId, body, new TransportTransaction(), 0);
+
+                    var result = await instance.PushError(errorContext);
+
+                    if (result == ErrorHandleResult.RetryRequired)
+                    {
+                        throw;
+                    }
+
+                    return;
+                }
+
+                throw;
+            }
         }
 
         public async Task Invoke(HttpRequest request, string messageType, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
@@ -75,26 +98,36 @@ namespace NServiceBus
             await instance.PushMessage(messageContext);
         }
 
-        public void EnablePassThroughRoutingForUnknownMessages(Func<string, string> routingRule)
-        {
-            endpointConfiguration.Pipeline.Register(b=>
-            {
-                var registry = endpointConfiguration.GetSettings().Get<MessageMetadataRegistry>();
-
-                return new PassThroughBehavior(registry, routingRule);
-            },  "Forwards unknown messages to the configured destination");
-        }
-
-        void WarnAgainstMultipleHandlersForSameMessageType()
-        {
-            endpointConfiguration.Pipeline.Register(builder => new WarnAgainstMultipleHandlersForSameMessageTypeBehavior(builder.Build<MessageHandlerRegistry>()), "Warns against multiple handlers for same message type");
-        }
-
         public async Task Send<T>(T message, ILogger logger, ExecutionContext executionContext)
         {
             var instance = await GetEndpoint(logger, executionContext);
 
             await instance.Send(message);
+        }
+
+        public void UseNServiceBusPoisonMessageHandling(string errorQueue)
+        {
+            endpointConfiguration.Recoverability().CustomPolicy((c, e) =>
+            {
+                return RecoverabilityAction.MoveToError(errorQueue);
+            });
+
+            moveFailedMessagesToError = true;
+        }
+
+        public void EnablePassThroughRoutingForUnknownMessages(Func<string, string> routingRule)
+        {
+            endpointConfiguration.Pipeline.Register(b =>
+            {
+                var registry = endpointConfiguration.GetSettings().Get<MessageMetadataRegistry>();
+
+                return new PassThroughBehavior(registry, routingRule);
+            }, "Forwards unknown messages to the configured destination");
+        }
+
+        void WarnAgainstMultipleHandlersForSameMessageType()
+        {
+            endpointConfiguration.Pipeline.Register(builder => new WarnAgainstMultipleHandlersForSameMessageTypeBehavior(builder.Build<MessageHandlerRegistry>()), "Warns against multiple handlers for same message type");
         }
 
         async Task<IEndpointInstance> GetEndpoint(ILogger logger, ExecutionContext executionContext)
@@ -132,5 +165,6 @@ namespace NServiceBus
         EndpointConfiguration endpointConfiguration;
         IEndpointInstance endpointInstance;
         TransportExtensions<AzureServiceBusTransport> transport;
+        bool moveFailedMessagesToError;
     }
 }

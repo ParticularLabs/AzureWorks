@@ -13,6 +13,9 @@ namespace Demo.ASB
             endpoint = new FunctionsAwareServiceBusEndpoint(endpointName);
 
             endpoint.Routing.RouteToEndpoint(typeof(SomeRoutedMessage), endpointName); //route to our self just to demo
+
+            //use NSB for poison message handling to not have failed messages go into the DLQ
+            endpoint.UseNServiceBusPoisonMessageHandling("error");
         }
 
         [FunctionName(endpointName)] // this is the "one function to all handlers for different messages" - A junction function
