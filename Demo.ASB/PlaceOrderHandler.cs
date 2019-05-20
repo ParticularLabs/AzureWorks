@@ -1,3 +1,5 @@
+using System;
+
 namespace Demo.ASB
 {
     using System.Threading.Tasks;
@@ -8,6 +10,7 @@ namespace Demo.ASB
     {
         public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
         {
+            //throw new Exception("Simulated");
             logger.Info("Place order!");
 
             await context.GetAsyncCollector<string>()
