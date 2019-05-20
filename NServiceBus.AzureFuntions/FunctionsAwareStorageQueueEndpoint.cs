@@ -38,7 +38,7 @@ namespace NServiceBus.AzureFuntions
         {
             var instance = await GetEndpoint(logger, executionContext);
 
-            var messageId = message.Id;           
+            var messageId = message.Id;
 
             var unwrapped = unwrapper.Unwrap(message);
 
@@ -49,9 +49,41 @@ namespace NServiceBus.AzureFuntions
             rootContext.Set(collector);
 
             var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
-            
-            //TODO: right now the native retries are used, should we have an option to move to "our" error?
-            await instance.PushMessage(messageContext);
+
+
+            try
+            {
+
+                await instance.PushMessage(messageContext);
+            }
+            catch (Exception ex)
+            {
+                if (moveFailedMessagesToError && message.DequeueCount > 4)
+                {
+                    var errorContext = new ErrorContext(ex, headers, messageId, body,new TransportTransaction(), message.DequeueCount);
+
+                    var result = await instance.PushError(errorContext);
+
+                    if (result == ErrorHandleResult.RetryRequired)
+                    {
+                        throw;
+                    }
+
+                    return;
+                }
+
+                throw;
+            }
+        }
+
+        public void UseNServiceBusPoisonMessageHandling(string errorQueue)
+        {
+            endpointConfiguration.Recoverability().CustomPolicy((c, e) =>
+            {
+                return RecoverabilityAction.MoveToError(errorQueue);
+            });
+
+            moveFailedMessagesToError = true;
         }
 
         public void EnablePassThroughRoutingForUnknownMessages(Func<string, string> routingRule)
@@ -116,5 +148,6 @@ namespace NServiceBus.AzureFuntions
         IEndpointInstance endpointInstance;
         TransportExtensions<AzureStorageQueueTransport> transport;
         IMessageEnvelopeUnwrapper unwrapper;
+        bool moveFailedMessagesToError;
     }
 }

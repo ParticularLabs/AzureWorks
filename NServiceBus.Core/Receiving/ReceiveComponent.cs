@@ -59,6 +59,10 @@ namespace NServiceBus
             }
 
             mainPipelineExecutor = new MainPipelineExecutor(builder, pipeline);
+            var recoverabilityExecutorFactory = builder.Build<RecoverabilityExecutorFactory>();
+
+            mainRecoverabilityExecutor = recoverabilityExecutorFactory.CreateDefault(eventAggregator, configuration.LocalAddress);
+
 
             if (UseManualPump)
             {
@@ -70,7 +74,7 @@ namespace NServiceBus
                 Logger.Warn("All queues owned by the endpoint will be purged on startup.");
             }
 
-            AddReceivers();
+            AddReceivers(recoverabilityExecutorFactory);
 
             foreach (var receiver in receivers)
             {
@@ -89,6 +93,11 @@ namespace NServiceBus
         public Task PushMessage(MessageContext messageContext)
         {
             return mainPipelineExecutor.Invoke(messageContext);
+        }
+
+        public Task<ErrorHandleResult> PushError(ErrorContext errorContext)
+        {
+            return mainRecoverabilityExecutor.Invoke(errorContext);
         }
 
         public void Start()
@@ -150,16 +159,15 @@ namespace NServiceBus
 
         bool UseManualPump => settings.GetOrDefault<bool>("hack-do-not-use-the-pump");
 
-        void AddReceivers()
+        void AddReceivers(RecoverabilityExecutorFactory recoverabilityExecutorFactory)
         {
             var requiredTransactionSupport = configuration.TransactionMode;
-            var recoverabilityExecutorFactory = builder.Build<RecoverabilityExecutorFactory>();
-
-            var recoverabilityExecutor = recoverabilityExecutorFactory.CreateDefault(eventAggregator, configuration.LocalAddress);
+       
+            mainRecoverabilityExecutor = recoverabilityExecutorFactory.CreateDefault(eventAggregator, configuration.LocalAddress);
             var pushSettings = new PushSettings(configuration.LocalAddress, errorQueue, configuration.PurgeOnStartup, requiredTransactionSupport);
             var dequeueLimitations = configuration.PushRuntimeSettings;
 
-            receivers.Add(new TransportReceiver(MainReceiverId, BuildMessagePump(), pushSettings, dequeueLimitations, mainPipelineExecutor, recoverabilityExecutor, criticalError));
+            receivers.Add(new TransportReceiver(MainReceiverId, BuildMessagePump(), pushSettings, dequeueLimitations, mainPipelineExecutor, mainRecoverabilityExecutor, criticalError));
 
             if (configuration.InstanceSpecificQueue != null)
             {
@@ -190,6 +198,7 @@ namespace NServiceBus
         TransportReceiveInfrastructure receiveInfrastructure;
         PipelineComponent pipeline;
         IPipelineExecutor mainPipelineExecutor;
+        RecoverabilityExecutor mainRecoverabilityExecutor;
         IBuilder builder;
         readonly IEventAggregator eventAggregator;
         CriticalError criticalError;

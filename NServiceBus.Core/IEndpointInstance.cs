@@ -20,5 +20,13 @@ namespace NServiceBus
         /// <param name="messageContext"></param>
         /// <returns></returns>
         Task PushMessage(MessageContext messageContext);
+
+
+        /// <summary>
+        /// Manually pushes a message into recoverability
+        /// </summary>
+        /// <param name="errorContext"></param>
+        /// <returns></returns>
+        Task<ErrorHandleResult> PushError(ErrorContext errorContext);
     }
 }

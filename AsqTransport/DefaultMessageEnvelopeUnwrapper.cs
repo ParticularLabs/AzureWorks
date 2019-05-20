@@ -1,3 +1,5 @@
+using System;
+
 namespace NServiceBus.Transport.AzureStorageQueues
 {
     using System.IO;
@@ -17,7 +19,18 @@ namespace NServiceBus.Transport.AzureStorageQueues
             MessageWrapper m;
             using (var stream = new MemoryStream(rawMessage.AsBytes))
             {
-                m = messageWrapperSerializer.Deserialize(stream);
+                try
+                {
+                    m = messageWrapperSerializer.Deserialize(stream);
+                }
+                catch (Exception e)
+                {
+                    //not a NSB envelope
+                    return new MessageWrapper
+                    {
+                        Body = rawMessage.AsBytes
+                    };
+                }
             }
 
             if (m == null)

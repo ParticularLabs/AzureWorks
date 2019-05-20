@@ -66,6 +66,11 @@ namespace NServiceBus
             return receiveComponent.PushMessage(messageContext);
         }
 
+        public Task<ErrorHandleResult> PushError(ErrorContext errorContext)
+        {
+            return receiveComponent.PushError(errorContext);
+        }
+
         public Task Send(object message, SendOptions options)
         {
             return messageSession.Send(message, options);
