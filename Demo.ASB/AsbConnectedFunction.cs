@@ -26,7 +26,7 @@ namespace Demo.ASB
             ILogger logger,
             ExecutionContext context)
         {
-            return endpoint.Invoke(message, logger, collector, context, null);
+            return endpoint.Invoke(message, logger, collector, context);
         }
 
         static readonly FunctionsAwareServiceBusEndpoint endpoint;

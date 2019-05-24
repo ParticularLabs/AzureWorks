@@ -1,5 +1,3 @@
-using System;
-
 namespace Demo.ASB
 {
     using System.Threading.Tasks;
@@ -10,7 +8,7 @@ namespace Demo.ASB
     {
         public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
         {
-            logger.Info("Handler with real AtomicSendsWithReceive!");
+            logger.Info("Handler with real SendsAtomicWithReceive transaction mode!");
 
             await context.Send(new SomeRoutedMessage()); // sending to "sales-atomic-2" endpoint/queue in an atomic fashion
         }

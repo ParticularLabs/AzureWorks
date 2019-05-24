@@ -32,7 +32,7 @@ namespace Demo.HttpApi
             ILogger logger,
             ExecutionContext context)
         {
-            return endpoint.Invoke(request, messagetype, logger, null, context, null);
+            return endpoint.Invoke(request, messagetype, logger, collector:null, context);
         }
 
         [FunctionName(endpointName)] // this is the "one function to all handlers for different messages" - A junction function
@@ -40,7 +40,7 @@ namespace Demo.HttpApi
             ILogger logger,
             ExecutionContext context)
         {
-            return endpoint.Invoke(message, logger, null, context, null);
+            return endpoint.Invoke(message, logger, collector:null, context, messageReceiver:null);
         }
 
         //do not use messaging for queries

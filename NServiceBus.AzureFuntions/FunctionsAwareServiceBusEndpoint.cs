@@ -37,7 +37,7 @@ namespace NServiceBus
             WarnAgainstMultipleHandlersForSameMessageType();
         }
 
-        public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext, MessageReceiver messageReceiver)
+        public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext, MessageReceiver messageReceiver = null)
         {
             var messageId = message.GetMessageId();
             var headers = message.GetNServiceBusHeaders();
@@ -60,9 +60,9 @@ namespace NServiceBus
             
             try
             {
-                // TODO: only should be done if in sends atomic with receive mode
                 var requiredTransactionMode = instance.TransportTransactionMode;
-                var useTransaction = requiredTransactionMode == TransportTransactionMode.SendsAtomicWithReceive;
+                // TODO: only should be done if in sends atomic with receive mode and message receiver is provided
+                var useTransaction = requiredTransactionMode == TransportTransactionMode.SendsAtomicWithReceive && messageReceiver != null;
 
                 using (var scope =  useTransaction ? new TransactionScope(TransactionScopeOption.RequiresNew, TransactionScopeAsyncFlowOption.Enabled) : null)
                 {
@@ -114,7 +114,7 @@ namespace NServiceBus
         }
 
 
-        public async Task<IActionResult> Invoke(HttpRequest request, string messageType, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext, MessageReceiver messageReceiver)
+        public async Task<IActionResult> Invoke(HttpRequest request, string messageType, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
         {
             var messageId = Guid.NewGuid().ToString("N");
             var headers = new Dictionary<string, string> { [Headers.EnclosedMessageTypes] = messageType };
