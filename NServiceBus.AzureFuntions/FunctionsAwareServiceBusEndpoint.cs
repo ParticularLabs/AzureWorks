@@ -66,13 +66,16 @@ namespace NServiceBus
 
                 using (var scope =  useTransaction ? new TransactionScope(TransactionScopeOption.RequiresNew, TransactionScopeAsyncFlowOption.Enabled) : null)
                 {
-                    var transportTransaction = CreateTransportTransaction(requiredTransactionMode, messageReceiver, message.PartitionKey);
+                    var transportTransaction = CreateTransportTransaction(useTransaction, messageReceiver, message.PartitionKey);
                     var messageContext = new MessageContext(messageId, headers, body, transportTransaction, new CancellationTokenSource(), rootContext);
 
                     await instance.PushMessage(messageContext);
 
-                    // Azure Function auto-completion is disabled, we need to do it
-                    await messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
+                    // Azure Function auto-completion would be disabled if we try to run in SendsAtomicWithReceive, need to complete message manually
+                    if (useTransaction)
+                    {
+                        await messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
+                    }
 
                     scope?.Complete();
                 }
@@ -100,11 +103,11 @@ namespace NServiceBus
             }
         }
 
-        TransportTransaction CreateTransportTransaction(TransportTransactionMode requiredTransactionMode, MessageReceiver messageReceiver, string incomingQueuePartitionKey)
+        TransportTransaction CreateTransportTransaction(bool useTransaction, MessageReceiver messageReceiver, string incomingQueuePartitionKey)
         {
             var transportTransaction = new TransportTransaction();
 
-            if (requiredTransactionMode == TransportTransactionMode.SendsAtomicWithReceive)
+            if (useTransaction)
             {
                 transportTransaction.Set((messageReceiver.ServiceBusConnection, messageReceiver.Path));
                 transportTransaction.Set("IncomingQueue.PartitionKey", incomingQueuePartitionKey);
