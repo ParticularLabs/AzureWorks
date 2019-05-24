@@ -71,6 +71,8 @@ namespace NServiceBus
             return receiveComponent.PushError(errorContext);
         }
 
+        public TransportTransactionMode TransportTransactionMode => receiveComponent.TransportTransactionMode;
+
         public Task Send(object message, SendOptions options)
         {
             return messageSession.Send(message, options);
@@ -102,7 +104,7 @@ namespace NServiceBus
         }
 
         IBuilder builder;
-        ReceiveComponent receiveComponent;
+        internal ReceiveComponent receiveComponent;
         FeatureRunner featureRunner;
         IMessageSession messageSession;
         TransportInfrastructure transportInfrastructure;

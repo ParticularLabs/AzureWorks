@@ -20,6 +20,9 @@ using ExecutionContext = Microsoft.Azure.WebJobs.ExecutionContext;
 
 namespace NServiceBus
 {
+    using System.Transactions;
+    using Microsoft.Azure.ServiceBus.Core;
+
     public class FunctionsAwareServiceBusEndpoint
     {
         public FunctionsAwareServiceBusEndpoint(string endpointName)
@@ -34,7 +37,7 @@ namespace NServiceBus
             WarnAgainstMultipleHandlersForSameMessageType();
         }
 
-        public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
+        public async Task Invoke(Message message, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext, MessageReceiver messageReceiver)
         {
             var messageId = message.GetMessageId();
             var headers = message.GetNServiceBusHeaders();
@@ -53,14 +56,27 @@ namespace NServiceBus
             }
             rootContext.Set(collector);
 
-            var messageContext = new MessageContext(messageId, headers, body, new TransportTransaction(), new CancellationTokenSource(), rootContext);
-
             var instance = await GetEndpoint(logger, executionContext);
-
-
+            
             try
             {
-                await instance.PushMessage(messageContext);
+                // TODO: only should be done if in sends atomic with receive mode
+                var requiredTransactionMode = instance.TransportTransactionMode;
+                var useTransaction = requiredTransactionMode == TransportTransactionMode.SendsAtomicWithReceive;
+
+                using (var scope =  useTransaction ? new TransactionScope(TransactionScopeOption.RequiresNew, TransactionScopeAsyncFlowOption.Enabled) : null)
+                {
+                    var transportTransaction = CreateTransportTransaction(requiredTransactionMode, messageReceiver, message.PartitionKey);
+                    var messageContext = new MessageContext(messageId, headers, body, transportTransaction, new CancellationTokenSource(), rootContext);
+
+                    await instance.PushMessage(messageContext);
+
+                    // Azure Function auto-completion is disabled, we need to do it
+                    await messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
+
+                    scope?.Complete();
+                }
+
             }
             catch (Exception ex)
             {
@@ -84,7 +100,21 @@ namespace NServiceBus
             }
         }
 
-        public async Task<IActionResult> Invoke(HttpRequest request, string messageType, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext)
+        TransportTransaction CreateTransportTransaction(TransportTransactionMode requiredTransactionMode, MessageReceiver messageReceiver, string incomingQueuePartitionKey)
+        {
+            var transportTransaction = new TransportTransaction();
+
+            if (requiredTransactionMode == TransportTransactionMode.SendsAtomicWithReceive)
+            {
+                transportTransaction.Set((messageReceiver.ServiceBusConnection, messageReceiver.Path));
+                transportTransaction.Set("IncomingQueue.PartitionKey", incomingQueuePartitionKey);
+            }
+
+            return transportTransaction;
+        }
+
+
+        public async Task<IActionResult> Invoke(HttpRequest request, string messageType, ILogger logger, IAsyncCollector<string> collector, ExecutionContext executionContext, MessageReceiver messageReceiver)
         {
             var messageId = Guid.NewGuid().ToString("N");
             var headers = new Dictionary<string, string> { [Headers.EnclosedMessageTypes] = messageType };

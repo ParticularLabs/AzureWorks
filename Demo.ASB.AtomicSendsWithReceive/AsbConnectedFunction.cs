@@ -2,6 +2,7 @@ namespace Demo.ASB
 {
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus;
+    using Microsoft.Azure.ServiceBus.Core;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Extensions.Logging;
     using NServiceBus;
@@ -12,7 +13,7 @@ namespace Demo.ASB
         {
             endpoint = new FunctionsAwareServiceBusEndpoint(endpointName);
 
-            endpoint.Routing.RouteToEndpoint(typeof(SomeRoutedMessage), endpointName); //route to our self just to demo
+            endpoint.Routing.RouteToEndpoint(typeof(SomeRoutedMessage), "sales-atomic-2"); //route to our self just to demo
 
             //use NSB for poison message handling to not have failed messages go into the DLQ
             endpoint.UseNServiceBusPoisonMessageHandling("error");
@@ -24,13 +25,14 @@ namespace Demo.ASB
         public static Task Run([ServiceBusTrigger(endpointName, Connection = NServiceBus.FunctionsConstants.ConnectionString)]Message message,
             [ServiceBus("some-queue", Connection = NServiceBus.FunctionsConstants.ConnectionString)]IAsyncCollector<string> collector,
             ILogger logger,
-            ExecutionContext context)
+            ExecutionContext context,
+            MessageReceiver messageReceiver)
         {
-            return endpoint.Invoke(message, logger, collector, context, null);
+            return endpoint.Invoke(message, logger, collector, context, messageReceiver);
         }
 
         static readonly FunctionsAwareServiceBusEndpoint endpoint;
 
-        const string endpointName = "sales";
+        const string endpointName = "sales-atomic";
     }
 }
