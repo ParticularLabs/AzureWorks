@@ -84,6 +84,7 @@ namespace NServiceBus
             {
                 // TODO: is 4 the right value?
                 // TODO: Should we provide delayed retries as well?
+                // TODO: when using transaction, complete the incoming message along with sending the error message
                 if (moveFailedMessagesToError && message.SystemProperties.DeliveryCount > 4)
                 {
                     var errorContext = new ErrorContext(ex, headers, messageId, body, new TransportTransaction(), 0);
