@@ -60,9 +60,8 @@ namespace NServiceBus
             
             try
             {
-                var requiredTransactionMode = instance.TransportTransactionMode;
                 // TODO: only should be done if in sends atomic with receive mode and message receiver is provided
-                var useTransaction = requiredTransactionMode == TransportTransactionMode.SendsAtomicWithReceive && messageReceiver != null;
+                var useTransaction = messageReceiver != null;
 
                 using (var scope =  useTransaction ? new TransactionScope(TransactionScopeOption.RequiresNew, TransactionScopeAsyncFlowOption.Enabled) : null)
                 {
