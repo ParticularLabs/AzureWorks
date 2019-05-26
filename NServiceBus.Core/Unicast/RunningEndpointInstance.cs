@@ -102,7 +102,7 @@ namespace NServiceBus
         }
 
         IBuilder builder;
-        internal ReceiveComponent receiveComponent;
+        ReceiveComponent receiveComponent;
         FeatureRunner featureRunner;
         IMessageSession messageSession;
         TransportInfrastructure transportInfrastructure;
