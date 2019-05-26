@@ -40,7 +40,7 @@ namespace Demo.HttpApi
             ILogger logger,
             ExecutionContext context)
         {
-            return endpoint.Invoke(message, logger, collector:null, context, messageReceiver:null);
+            return endpoint.Invoke(message, logger, collector:null, context);
         }
 
         //do not use messaging for queries
