@@ -192,8 +192,6 @@ namespace NServiceBus
             return receiveInfrastructure.MessagePumpFactory();
         }
 
-        public TransportTransactionMode TransportTransactionMode => configuration.TransactionMode;
-
         private readonly SettingsHolder settings;
         ReceiveConfiguration configuration;
         List<TransportReceiver> receivers = new List<TransportReceiver>();

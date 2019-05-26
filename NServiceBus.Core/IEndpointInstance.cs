@@ -28,10 +28,5 @@ namespace NServiceBus
         /// <param name="errorContext"></param>
         /// <returns></returns>
         Task<ErrorHandleResult> PushError(ErrorContext errorContext);
-
-        /// <summary>
-        /// Transport transaction mode
-        /// </summary>
-        TransportTransactionMode TransportTransactionMode { get; }
     }
 }
