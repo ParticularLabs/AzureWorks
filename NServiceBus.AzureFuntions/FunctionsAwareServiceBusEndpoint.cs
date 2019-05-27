@@ -209,13 +209,16 @@ namespace NServiceBus
 
         async Task<IEndpointInstance> GetEndpoint(ILogger logger, ExecutionContext executionContext)
         {
-            //TODO: locking or lazy
+            semaphoreLock.Wait();
+
             if (endpointInstance != null)
             {
                 return endpointInstance;
             }
 
             endpointInstance = await InitializeEndpoint(logger, executionContext);
+
+            semaphoreLock.Release();
 
             return endpointInstance;
         }
@@ -243,5 +246,6 @@ namespace NServiceBus
         IEndpointInstance endpointInstance;
         TransportExtensions<AzureServiceBusTransport> transport;
         bool moveFailedMessagesToError;
+        SemaphoreSlim semaphoreLock = new SemaphoreSlim(initialCount: 1, maxCount: 1);
     }
 }
