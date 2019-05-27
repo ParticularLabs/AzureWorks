@@ -75,7 +75,7 @@ namespace NServiceBus.AzureFuntions
                 throw;
             }
         }
-
+        
         public void UseNServiceBusPoisonMessageHandling(string errorQueue)
         {
             endpointConfiguration.Recoverability().CustomPolicy((c, e) =>
@@ -101,6 +101,12 @@ namespace NServiceBus.AzureFuntions
             endpointConfiguration.Pipeline.Register(builder => new WarnAgainstMultipleHandlersForSameMessageTypeBehavior(builder.Build<MessageHandlerRegistry>()), "Warns against multiple handlers for same message type");
         }
 
+        public async Task Subscribe(ILogger logger, ExecutionContext executionContext)
+        {
+            // relying on autosubscribe
+            await GetEndpoint(logger, executionContext);
+        }
+
         public async Task Send<T>(T message, ILogger logger, ExecutionContext executionContext)
         {
             var instance = await GetEndpoint(logger, executionContext);
@@ -110,13 +116,14 @@ namespace NServiceBus.AzureFuntions
 
         async Task<IEndpointInstance> GetEndpoint(ILogger logger, ExecutionContext executionContext)
         {
-            //TODO: locking or lazy
-            if (endpointInstance != null)
+            throttler.Wait();
+            
+            if (endpointInstance == null)
             {
-                return endpointInstance;
+                endpointInstance = await InitializeEndpoint(logger, executionContext);
             }
 
-            endpointInstance = await InitializeEndpoint(logger, executionContext);
+            throttler.Release();
 
             return endpointInstance;
         }
@@ -124,7 +131,6 @@ namespace NServiceBus.AzureFuntions
         Task<IEndpointInstance> InitializeEndpoint(ILogger logger, ExecutionContext executionContext)
         {
             NServiceBus.Logging.LogManager.UseFactory(new MsExtLoggerFactory(logger));
-
 
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(executionContext.FunctionDirectory)
@@ -142,8 +148,9 @@ namespace NServiceBus.AzureFuntions
 
         }
 
-        public RoutingSettings Routing { get; }
+        public RoutingSettings<AzureStorageQueueTransport> Routing { get; }
 
+        SemaphoreSlim throttler = new SemaphoreSlim(initialCount: 1, maxCount: 1);
         EndpointConfiguration endpointConfiguration;
         IEndpointInstance endpointInstance;
         TransportExtensions<AzureStorageQueueTransport> transport;
