@@ -11,13 +11,6 @@ namespace Demo.ASQ.Sagas.Sales
 
     public static class SalesFunctionsApi
     {
-        static SalesFunctionsApi()
-        {
-            endpoint = new FunctionsAwareStorageQueueEndpoint(endpointName);
-
-            endpoint.Routing.RouteToEndpoint(typeof(PlaceOrder), endpointName); //routes locally to sales functions host
-        }
-    
         [FunctionName("salesApi-placeOrder")]
         public static async Task<IActionResult> Run(
              [HttpTrigger(AuthorizationLevel.Function, "post", Route = "sales/placeOrder/{orderId}")] HttpRequest req,
@@ -25,16 +18,12 @@ namespace Demo.ASQ.Sagas.Sales
              ILogger logger,
              ExecutionContext context)
         {
-            await endpoint.Send(new PlaceOrder()
+            await SalesFunctionsHost.Endpoint.Value.Send(new PlaceOrder()
             {
                 OrderId = orderId
             }, logger, context);
 
             return new AcceptedResult();
         }
-
-        static FunctionsAwareStorageQueueEndpoint endpoint;
-
-        const string endpointName = "sales";
     }
 }

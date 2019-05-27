@@ -1,3 +1,5 @@
+using System;
+
 namespace Demo.ASQ.Sagas.Shipping
 {
     using Microsoft.Azure.WebJobs;
@@ -10,15 +12,17 @@ namespace Demo.ASQ.Sagas.Shipping
 
     public static class ShippingFunctionsHost
     {
-        static ShippingFunctionsHost()
+        static FunctionsAwareStorageQueueEndpoint Initialize()
         {
-            endpoint = new FunctionsAwareStorageQueueEndpoint(endpointName);
+           var endpoint = new FunctionsAwareStorageQueueEndpoint(endpointName);
 
-            // done manually
-      //      endpoint.Routing.RegisterPublisher(typeof(OrderBooked), "booking");
-      //      endpoint.Routing.RegisterPublisher(typeof(OrderBilled), "billing");
+            
+            endpoint.Routing.RegisterPublisher(typeof(OrderBooked), "booking");
+            endpoint.Routing.RegisterPublisher(typeof(OrderBilled), "billing");
 
             endpoint.UseNServiceBusPoisonMessageHandling("error");
+
+            return endpoint;
         }
 
         [FunctionName(endpointName)] // this function acts like a message pump
@@ -26,10 +30,11 @@ namespace Demo.ASQ.Sagas.Shipping
             ILogger logger,
             ExecutionContext context)
         {
-            return endpoint.Invoke(message, logger, null, context);
+            return Endpoint.Value.Invoke(message, logger, null, context);
         }
 
-        static readonly FunctionsAwareStorageQueueEndpoint endpoint;
+        public static readonly Lazy<FunctionsAwareStorageQueueEndpoint> Endpoint = new Lazy<FunctionsAwareStorageQueueEndpoint>(Initialize);
+
 
         const string endpointName = "shipping";
     }

@@ -1,3 +1,4 @@
+using Demo.ASQ.Sagas.Shipping;
 using NServiceBus;
 
 namespace Demo.ASQ.Sagas.Sales
@@ -13,14 +14,6 @@ namespace Demo.ASQ.Sagas.Sales
 
     public static class ShippingFunctionsApi
     {
-        static ShippingFunctionsApi()
-        {
-            endpoint = new FunctionsAwareStorageQueueEndpoint(endpointName);
-
-            endpoint.Routing.RegisterPublisher(typeof(OrderBooked), "booking");
-            endpoint.Routing.RegisterPublisher(typeof(OrderBilled), "billing");
-        }
-    
         [FunctionName("shippingApi-subscribe")]
         public static async Task<IActionResult> Run(
              [HttpTrigger(AuthorizationLevel.Function, "get", Route = "shipping/subscribe")] HttpRequest req,
@@ -28,14 +21,10 @@ namespace Demo.ASQ.Sagas.Sales
              ExecutionContext context)
         {
             //workaround to start and endpoint instance so that it can subscribe
-            await endpoint.Subscribe(logger, context);
+            await ShippingFunctionsHost.Endpoint.Value.Subscribe(logger, context);
                 
 
             return new AcceptedResult();
         }
-
-        static FunctionsAwareStorageQueueEndpoint endpoint;
-
-        const string endpointName = "shipping";
     }
 }

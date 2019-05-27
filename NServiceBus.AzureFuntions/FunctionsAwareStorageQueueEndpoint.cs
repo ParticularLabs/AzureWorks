@@ -116,14 +116,14 @@ namespace NServiceBus.AzureFuntions
 
         async Task<IEndpointInstance> GetEndpoint(ILogger logger, ExecutionContext executionContext)
         {
-            throttler.Wait();
+            semaphoreLock.Wait();
             
             if (endpointInstance == null)
             {
                 endpointInstance = await InitializeEndpoint(logger, executionContext);
             }
 
-            throttler.Release();
+            semaphoreLock.Release();
 
             return endpointInstance;
         }
@@ -150,7 +150,7 @@ namespace NServiceBus.AzureFuntions
 
         public RoutingSettings<AzureStorageQueueTransport> Routing { get; }
 
-        SemaphoreSlim throttler = new SemaphoreSlim(initialCount: 1, maxCount: 1);
+        SemaphoreSlim semaphoreLock = new SemaphoreSlim(initialCount: 1, maxCount: 1);
         EndpointConfiguration endpointConfiguration;
         IEndpointInstance endpointInstance;
         TransportExtensions<AzureStorageQueueTransport> transport;

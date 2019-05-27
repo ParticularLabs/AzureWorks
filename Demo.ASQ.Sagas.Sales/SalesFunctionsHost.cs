@@ -1,3 +1,5 @@
+using System;
+
 namespace Demo.ASQ.Sagas.Sales
 {
     using Microsoft.Azure.WebJobs;
@@ -10,14 +12,17 @@ namespace Demo.ASQ.Sagas.Sales
 
     public static class SalesFunctionsHost
     {
-        static SalesFunctionsHost()
+        static FunctionsAwareStorageQueueEndpoint Initialize()
         {
-            endpoint = new FunctionsAwareStorageQueueEndpoint(endpointName);
+            var endpoint = new FunctionsAwareStorageQueueEndpoint(endpointName);
 
+            endpoint.Routing.RouteToEndpoint(typeof(PlaceOrder), endpointName);
             endpoint.Routing.RouteToEndpoint(typeof(BookOrder), "booking");
             endpoint.Routing.RouteToEndpoint(typeof(BillOrder), "billing");
 
             endpoint.UseNServiceBusPoisonMessageHandling("error");
+
+            return endpoint;
         }
 
         [FunctionName(endpointName)] // this function acts like a message pump
@@ -25,10 +30,10 @@ namespace Demo.ASQ.Sagas.Sales
             ILogger logger,
             ExecutionContext context)
         {
-            return endpoint.Invoke(message, logger, null, context);
+            return Endpoint.Value.Invoke(message, logger, null, context);
         }
 
-        static readonly FunctionsAwareStorageQueueEndpoint endpoint;
+        public static readonly Lazy<FunctionsAwareStorageQueueEndpoint> Endpoint = new Lazy<FunctionsAwareStorageQueueEndpoint>(Initialize);
 
         const string endpointName = "sales";
     }
